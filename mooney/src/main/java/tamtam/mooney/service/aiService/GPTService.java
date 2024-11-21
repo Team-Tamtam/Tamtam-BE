@@ -1,5 +1,6 @@
 package tamtam.mooney.service.aiService;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,23 +13,30 @@ import java.io.OutputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-
 @Service
 @RequiredArgsConstructor
 public class GPTService {
+    private final RestTemplate restTemplate;
     private final GPTConfig gptConfig;
-    //private final RestTemplate restTemplate;
 
-    String apiUrl = gptConfig.url;
-    String apiKey = gptConfig.key;
+    private String apiURL;
+    private String apiKey;
+    private String model;
+
+    @PostConstruct
+    public void initialize() {
+        this.apiURL = gptConfig.getUrl();
+        this.apiKey = gptConfig.getKey();
+        this.model = gptConfig.getModel();
+    }
 
 
     public void testOpenAiConnection() {
         try {
 
-            if (apiUrl == null || apiKey == null) {
+            if (apiURL == null || apiKey == null) {
                 System.out.println("API URL 또는 API Key가 설정되지 않았습니다.");
-                if(apiUrl != null){
+                if(apiURL != null){
                     System.out.println("apiurl은 존재합니다.");
                 }
                 else if(apiKey != null){
@@ -63,7 +71,7 @@ public class GPTService {
         """.formatted(systemContent, userContent);
 
             // Set up the connection
-            URL url = new URL(apiUrl);
+            URL url = new URL(apiURL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setRequestMethod("POST");
