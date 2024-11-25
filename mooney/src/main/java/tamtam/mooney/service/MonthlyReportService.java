@@ -42,7 +42,7 @@ public class MonthlyReportService {
         String agentComment = generateFeedbackMessage(budgetAmount, totalExpenseAmount);
 
         // MonthlyReport 저장 또는 갱신
-        var existingReport = monthlyReportRepository.findByUserAndPeriod(user.getUserId(),  period);
+        var existingReport = monthlyReportRepository.findByUserAndPeriod(user,  period);
         if (existingReport.isPresent()) {
             var monthlyReport = existingReport.get();
             monthlyReport.update(budgetAmount, totalExpenseAmount, totalIncomeAmount, agentComment);

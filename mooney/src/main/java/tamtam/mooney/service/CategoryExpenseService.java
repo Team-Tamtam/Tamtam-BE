@@ -33,7 +33,7 @@ public class CategoryExpenseService {
         LocalDate endOfLastMonth = startOfMonth.minusDays(1);
 
         // 지난 달 예산 가져오기
-        BigDecimal budgetAmountLastMonth = dailyBudgetRepository.findBudgetAmountByUserAndMonth(user.getUserId(), startOfLastMonth, endOfLastMonth);
+        BigDecimal budgetAmountLastMonth = dailyBudgetRepository.findBudgetAmountByUserAndMonth(user, startOfLastMonth, endOfLastMonth);
 
         // 이번 달 카테고리별 총 지출 금액 가져오기
         List<Expense> expenses = expenseRepository.findExpensesByMonth(startOfMonth, endOfMonth);
