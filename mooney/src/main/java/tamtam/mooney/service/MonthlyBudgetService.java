@@ -58,7 +58,6 @@ public class MonthlyBudgetService {
                 .categories(
                         gptResponse.getCategoryBudgets().stream()
                                 .map(category -> MonthlyBudgetResponseDto.CategoryBudgetDto.builder()
-                                        .categoryId(category.getId())
                                         .categoryName(category.getCategoryName())
                                         .categoryBudgetAmount(category.getBudgetAmount())
                                         .build()

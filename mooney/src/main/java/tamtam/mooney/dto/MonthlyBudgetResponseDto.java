@@ -17,7 +17,6 @@ public class MonthlyBudgetResponseDto {
     @Getter
     @Builder
     public static class CategoryBudgetDto {
-        private Long categoryId;
         private String categoryName;
         private BigDecimal categoryBudgetAmount;
     }

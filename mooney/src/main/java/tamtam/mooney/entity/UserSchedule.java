@@ -59,7 +59,7 @@ public class UserSchedule extends BaseTimeEntity {
     @Builder
     public UserSchedule(String title, CategoryName categoryName, LocalDateTime startDateTime, LocalDateTime endDateTime,
                         String location, Boolean isRepeating, String repeatType, DayOfWeek repeatDayOfWeek,
-                        Integer repeatDayOfMonth, BigDecimal predictedAmount, User user) {
+                        Integer repeatDayOfMonth, User user) {
         this.title = title;
         this.categoryName = categoryName;
         this.startDateTime = startDateTime;
@@ -70,7 +70,14 @@ public class UserSchedule extends BaseTimeEntity {
         this.repeatType = (repeatType != null) ? repeatType : null;
         this.repeatDayOfWeek = (repeatDayOfWeek != null) ? repeatDayOfWeek : null;
         this.repeatDayOfMonth = (repeatDayOfMonth != null) ? repeatDayOfMonth : null;
-        this.predictedAmount = predictedAmount;
         this.user = user;
+    }
+    public void setCategoryNameAndPredictedAmount(BigDecimal predictedAmount, CategoryName categoryName) {
+        if (predictedAmount != null) {
+            this.predictedAmount = predictedAmount;
+        }
+        if (categoryName != null) {
+            this.categoryName = categoryName;
+        }
     }
 }

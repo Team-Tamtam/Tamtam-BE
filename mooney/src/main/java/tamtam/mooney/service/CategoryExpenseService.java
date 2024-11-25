@@ -10,11 +10,9 @@ import tamtam.mooney.entity.MonthlyBudget;
 import tamtam.mooney.entity.User;
 import tamtam.mooney.global.exception.CustomException;
 import tamtam.mooney.global.exception.ErrorCode;
-import tamtam.mooney.repository.ExpenseRepository;
 import tamtam.mooney.repository.MonthlyBudgetRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,18 +44,20 @@ public class CategoryExpenseService {
                         Collectors.reducing(BigDecimal.ZERO, Expense::getAmount, BigDecimal::add)
                 ));
 
+        // 이번 달 총 지출 금액 계산
+        BigDecimal totalExpenseThisMonth = categoryStatsMap.values().stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         // 카테고리별 예산 비율 계산 및 DTO로 변환
         List<CategoryExpenseResponseDto.CategoryDto> categoryStats = categoryStatsMap.entrySet().stream()
                 .map(entry -> {
                     CategoryName categoryName = entry.getKey();
                     BigDecimal totalAmountThisMonth = entry.getValue();
 
-                    // 예산 비율 계산
-                    BigDecimal percentageOfTotal = totalAmountThisMonth
-                            .divide(budgetAmountLastMonth, 4, BigDecimal.ROUND_HALF_UP)
-                            .multiply(BigDecimal.valueOf(100));
-
-                    percentageOfTotal = percentageOfTotal.setScale(1, BigDecimal.ROUND_HALF_UP);
+                    // 이번 달 총 지출 금액에 대한 카테고리 지출 비율 계산
+                    BigDecimal percentageOfTotal = totalExpenseThisMonth.compareTo(BigDecimal.ZERO) > 0
+                            ? totalAmountThisMonth.divide(totalExpenseThisMonth, 3, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100))
+                            : BigDecimal.ZERO;
 
                     // Build and return CategoryDto
                     return CategoryExpenseResponseDto.CategoryDto.builder()

@@ -15,7 +15,6 @@ public class CategoryExpenseResponseDto {
     @Getter
     @Builder
     public static class CategoryDto {
-        private Long categoryId;
         private String categoryName;
         private BigDecimal percentage;
         private BigDecimal categoryExpenseAmount;
