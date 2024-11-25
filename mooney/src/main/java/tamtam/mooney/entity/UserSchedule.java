@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class Schedule extends BaseTimeEntity {
+public class UserSchedule extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false)
@@ -50,16 +50,16 @@ public class Schedule extends BaseTimeEntity {
     @Column
     private BigDecimal predictedAmount;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", updatable = false)
     @NotNull
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Builder
-    public Schedule(String title, CategoryName categoryName, LocalDateTime startDateTime, LocalDateTime endDateTime,
-                    String location, Boolean isRepeating, String repeatType, DayOfWeek repeatDayOfWeek,
-                    Integer repeatDayOfMonth, BigDecimal predictedAmount, User user) {
+    public UserSchedule(String title, CategoryName categoryName, LocalDateTime startDateTime, LocalDateTime endDateTime,
+                        String location, Boolean isRepeating, String repeatType, DayOfWeek repeatDayOfWeek,
+                        Integer repeatDayOfMonth, BigDecimal predictedAmount, User user) {
         this.title = title;
         this.categoryName = categoryName;
         this.startDateTime = startDateTime;
