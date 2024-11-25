@@ -10,9 +10,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class DailyBudget extends BaseTimeEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(updatable = false)
     private Long budgetId;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -26,7 +26,7 @@ public class DailyBudget extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; // 사용자 ID
+    private User user;
 
     @Builder
     public DailyBudget(BigDecimal budgetAmount, BigDecimal spentAmount, BigDecimal remainingAmount, User user) {

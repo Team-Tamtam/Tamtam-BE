@@ -10,8 +10,6 @@ import tamtam.mooney.repository.DailyBudgetRepository;
 import tamtam.mooney.repository.ScheduleRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,13 +17,11 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class DailyBudgetService {
+    private final UserService userService;
     private final DailyBudgetRepository dailyBudgetRepository;
     private final ScheduleRepository scheduleRepository;
 
     public DailyBudgetResponseDto getTomorrowBudgetAndSchedules(DailyBudgetRequestDto requestDto) {
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
-        LocalDateTime startOfTomorrow = tomorrow.atStartOfDay();
-        LocalDateTime endOfTomorrow = tomorrow.plusDays(1).atStartOfDay();
 
         // 반복 일정 조회 (반복 설정된 일정 가져오기)
         List<Schedule> repeatedSchedules = scheduleRepository.findByIsRepeatingTrue();
