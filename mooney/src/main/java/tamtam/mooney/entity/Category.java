@@ -27,9 +27,4 @@ public class Category extends BaseTimeEntity {
         this.categoryName = categoryName;
         this.icon = icon;
     }
-
-    public enum CategoryName {
-        FOOD,
-        TRANSPORT
-    }
 }

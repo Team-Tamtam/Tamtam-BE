@@ -19,8 +19,8 @@ public class MonthlyBudget extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long monthlyBudgetId;
 
-    @Column(nullable = false)
-    private YearMonth period;
+    @Column(nullable = false, length = 7)
+    private String period;
 
     @Column(nullable = false)
     @NotNull
@@ -37,9 +37,10 @@ public class MonthlyBudget extends BaseTimeEntity {
     private User user;
 
     @Builder
-    public MonthlyBudget(YearMonth period, BigDecimal initialAmount, BigDecimal finalAmount) {
+    public MonthlyBudget(String period, BigDecimal initialAmount, BigDecimal finalAmount, User user) {
         this.period = period;
         this.initialAmount = initialAmount;
         this.finalAmount = finalAmount;
+        this.user = user;
     }
 }

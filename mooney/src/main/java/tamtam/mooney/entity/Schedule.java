@@ -25,7 +25,7 @@ public class Schedule extends BaseTimeEntity {
     private BigDecimal predictedAmount;
 
     @Enumerated(EnumType.STRING)
-    private ExpenseCategory expenseCategory;
+    private CategoryName categoryName;
 
     @Column
     private String title;
@@ -42,7 +42,7 @@ public class Schedule extends BaseTimeEntity {
     @Column(nullable = false)
     private Boolean isRepeating; // 반복 여부
 
-    @Enumerated(EnumType.STRING)
+    @Column
     private String repeatType; // 반복 주기 (예: DAILY, WEEKLY, MONTHLY 등)
 
     @Column
@@ -58,11 +58,11 @@ public class Schedule extends BaseTimeEntity {
     private User user;
 
     @Builder
-    public Schedule(BigDecimal predictedAmount, ExpenseCategory expenseCategory, String title,
+    public Schedule(BigDecimal predictedAmount, CategoryName categoryName, String title,
                     LocalDateTime startDateTime, LocalDateTime endDateTime, String location,
                     Boolean isRepeating, String repeatType, DayOfWeek repeatDayOfWeek, Integer repeatDayOfMonth, User user) {
         this.predictedAmount = predictedAmount;
-        this.expenseCategory = expenseCategory;
+        this.categoryName = categoryName;
         this.title = title;
         this.startDateTime = startDateTime;
         this.endDateTime = endDateTime;

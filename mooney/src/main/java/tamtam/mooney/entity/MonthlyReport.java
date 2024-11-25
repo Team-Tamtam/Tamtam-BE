@@ -20,8 +20,8 @@ public class MonthlyReport extends BaseTimeEntity {
     @Column(updatable = false)
     private Long monthlyReportId;
 
-    @Column(nullable = false)
-    private YearMonth period; // 보고 기간 (연월)
+    @Column(nullable = false, length = 7)
+    private String period;
 
     @Column(nullable = false)
     @NotNull
@@ -51,7 +51,7 @@ public class MonthlyReport extends BaseTimeEntity {
     @Builder
     public MonthlyReport(String period, BigDecimal budgetAmount, BigDecimal totalExpenseAmount, BigDecimal totalIncomeAmount,
                          BudgetStatus budgetStatus, String agentComment, User user) {
-        this.period = YearMonth.parse(period);
+        this.period = period;
         this.budgetAmount = budgetAmount;
         this.totalExpenseAmount = totalExpenseAmount;
         this.totalIncomeAmount = totalIncomeAmount;
