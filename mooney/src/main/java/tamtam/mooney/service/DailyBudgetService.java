@@ -31,7 +31,9 @@ public class DailyBudgetService {
         // dto에서 받은 일정 조회
         List<UserSchedule> tomorrowSchedules = userScheduleRepository.findAllById(requestDto.getScheduleIds());
 
+        // predictedAmount가 0인 일정은 제외
         List<DailyBudgetResponseDto.RepeatedScheduleDto> repeatedScheduleDTOs = repeatedSchedules.stream()
+                .filter(schedule -> schedule.getPredictedAmount() != null && schedule.getPredictedAmount().compareTo(BigDecimal.ZERO) > 0)
                 .map(schedule -> DailyBudgetResponseDto.RepeatedScheduleDto.builder()
                         .scheduleId(schedule.getScheduleId())
                         .title(schedule.getTitle())
@@ -40,7 +42,10 @@ public class DailyBudgetService {
                         .build())
                 .collect(Collectors.toList());
 
+        // 내일 일정에서 중복된 항목 제거 (반복 일정과 동일한 일정은 제외)
         List<DailyBudgetResponseDto.TomorrowScheduleDto> tomorrowScheduleDTOs = tomorrowSchedules.stream()
+                .filter(schedule -> schedule.getPredictedAmount() != null && schedule.getPredictedAmount().compareTo(BigDecimal.ZERO) > 0)
+                .filter(schedule -> repeatedSchedules.stream().noneMatch(repeatedSchedule -> repeatedSchedule.getScheduleId().equals(schedule.getScheduleId())))
                 .map(schedule -> DailyBudgetResponseDto.TomorrowScheduleDto.builder()
                         .scheduleId(schedule.getScheduleId())
                         .title(schedule.getTitle())
