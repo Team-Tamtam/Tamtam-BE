@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.dto.MonthlyReportResponseDto;
+import tamtam.mooney.entity.BudgetStatus;
 import tamtam.mooney.entity.Expense;
 import tamtam.mooney.entity.MonthlyReport;
 import tamtam.mooney.entity.User;
@@ -40,12 +41,16 @@ public class MonthlyReportService {
         String agentComment = generateFeedbackMessage(budgetAmount, totalExpenseAmount);
 
         // MonthlyReport 저장 또는 갱신
-        var existingReport = monthlyReportRepository.findByUserAndPeriod(user,  period);
+        var existingReport = monthlyReportRepository.findByUserAndPeriod(user, period);
         if (existingReport.isPresent()) {
             var monthlyReport = existingReport.get();
-            monthlyReport.update(budgetAmount, totalExpenseAmount, totalIncomeAmount, agentComment);
+            // BudgetStatus 결정
+            BudgetStatus budgetStatus = determineBudgetStatus(monthlyReport.getBudgetAmount(), totalExpenseAmount);
+            monthlyReport.update(budgetAmount, totalExpenseAmount, totalIncomeAmount, agentComment, budgetStatus);
             monthlyReportRepository.save(monthlyReport);
         } else {
+            // 새로운 MonthlyReport 생성 시 BudgetStatus 설정
+            BudgetStatus budgetStatus = determineBudgetStatus(budgetAmount, totalExpenseAmount);
             var monthlyReport = MonthlyReport.builder()
                     .user(user)
                     .period(period)
@@ -53,6 +58,7 @@ public class MonthlyReportService {
                     .totalExpenseAmount(totalExpenseAmount)
                     .totalIncomeAmount(totalIncomeAmount)
                     .agentComment(agentComment)
+                    .budgetStatus(budgetStatus)  // BudgetStatus 추가
                     .build();
             monthlyReportRepository.save(monthlyReport);
         }
@@ -63,6 +69,17 @@ public class MonthlyReportService {
                 .totalIncomeAmount(totalIncomeAmount)
                 .feedbackMessage(agentComment)
                 .build();
+    }
+
+    // BudgetStatus 결정하는 메서드
+    private BudgetStatus determineBudgetStatus(BigDecimal budgetAmount, BigDecimal totalExpenseAmount) {
+        if (totalExpenseAmount.compareTo(budgetAmount) > 0) {
+            return BudgetStatus.OVER_BUDGET;  // 예산 초과
+        } else if (totalExpenseAmount.compareTo(budgetAmount) == 0) {
+            return BudgetStatus.ACHIEVED;    // 예산 달성
+        } else {
+            return BudgetStatus.NOT_ACHIEVED; // 예산 미달성
+        }
     }
 
     private String generateFeedbackMessage(BigDecimal budgetAmount, BigDecimal totalExpenseAmount) {

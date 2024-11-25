@@ -61,7 +61,7 @@ public class MonthlyReport extends BaseTimeEntity {
     }
 
     public void update(BigDecimal budgetAmount, BigDecimal totalExpenseAmount,
-                       BigDecimal totalIncomeAmount, String agentComment) {
+                       BigDecimal totalIncomeAmount, String agentComment, BudgetStatus budgetStatus) {
         if (budgetAmount != null) {
             this.budgetAmount = budgetAmount;
         }
@@ -73,6 +73,9 @@ public class MonthlyReport extends BaseTimeEntity {
         }
         if (agentComment != null && !agentComment.isEmpty()) {
             this.agentComment = agentComment;
+        }
+        if (budgetStatus != null) {
+            this.budgetStatus = budgetStatus;
         }
     }
 }

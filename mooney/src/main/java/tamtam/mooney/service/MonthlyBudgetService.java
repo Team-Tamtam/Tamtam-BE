@@ -12,7 +12,9 @@ import tamtam.mooney.entity.User;
 import tamtam.mooney.repository.MonthlyBudgetRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -93,15 +95,15 @@ public class MonthlyBudgetService {
     // 테스트 데이터
     @PostConstruct
     public void initMonthlyBudget() {
-        // 예시: 현재 사용자에 대해 기본 예산을 설정
-        User currentUser = userService.getCurrentUser(); // 현재 로그인한 사용자 가져오기
+        User currentUser = userService.getCurrentUser();
+        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
         // 예산이 없는 경우 기본 예산을 설정
-        if (monthlyBudgetRepository.findByUserAndPeriod(currentUser, getNextMonthPeriod()).isEmpty()) {
+        if (monthlyBudgetRepository.findByUserAndPeriod(currentUser, currentMonth).isEmpty()) {
             MonthlyBudget defaultBudget = MonthlyBudget.builder()
-                    .period("2024-11")
-                    .initialAmount(BigDecimal.valueOf(1000000)) // 기본 예산 금액 설정
-                    .finalAmount(BigDecimal.valueOf(1000000)) // 초기값과 동일
+                    .period(currentMonth)
+                    .initialAmount(BigDecimal.valueOf(850000))
+                    .finalAmount(BigDecimal.valueOf(850000))
                     .user(currentUser)
                     .build();
             monthlyBudgetRepository.save(defaultBudget); // 예산 저장

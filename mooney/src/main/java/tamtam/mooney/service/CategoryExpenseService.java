@@ -56,7 +56,7 @@ public class CategoryExpenseService {
                     BigDecimal percentageOfTotal = totalAmountThisMonth
                             .divide(budgetAmountLastMonth, 4, BigDecimal.ROUND_HALF_UP)
                             .multiply(BigDecimal.valueOf(100));
-                    
+
                     percentageOfTotal = percentageOfTotal.setScale(1, BigDecimal.ROUND_HALF_UP);
 
                     // Build and return CategoryDto
