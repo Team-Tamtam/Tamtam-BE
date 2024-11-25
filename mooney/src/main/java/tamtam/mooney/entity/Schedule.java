@@ -20,7 +20,7 @@ public class Schedule extends BaseTimeEntity {
     @Column(updatable = false)
     private Long scheduleId;
 
-    @Column(nullable = false)
+    @Column
     private BigDecimal predictedAmount;
 
     @Enumerated(EnumType.STRING)

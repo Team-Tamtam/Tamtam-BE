@@ -8,7 +8,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import tamtam.mooney.global.common.BaseTimeEntity;
 
 import java.math.BigDecimal;
-import java.time.YearMonth;
 
 
 @Getter

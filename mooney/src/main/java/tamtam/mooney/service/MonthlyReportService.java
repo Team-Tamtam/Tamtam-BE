@@ -4,11 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.dto.MonthlyReportResponseDto;
-import tamtam.mooney.entity.MonthlyBudget;
 import tamtam.mooney.entity.MonthlyReport;
 import tamtam.mooney.entity.User;
 import tamtam.mooney.repository.ExpenseRepository;
-import tamtam.mooney.repository.MonthlyBudgetRepository;
 import tamtam.mooney.repository.MonthlyReportRepository;
 
 import java.math.BigDecimal;
@@ -17,10 +15,10 @@ import java.time.LocalDate;
 @Service
 @RequiredArgsConstructor
 public class MonthlyReportService {
-    private final UserService userService;
-    private final MonthlyBudgetRepository monthlyBudgetRepository;
     private final ExpenseRepository expenseRepository;
     private final MonthlyReportRepository monthlyReportRepository;
+    private final UserService userService;
+    private final MonthlyBudgetService monthlyBudgetService;
 
     @Transactional
     public MonthlyReportResponseDto getMonthlyReport(int year, int month) {
@@ -29,10 +27,10 @@ public class MonthlyReportService {
         // 월 시작 및 종료 날짜 계산
         LocalDate startOfMonth = LocalDate.of(year, month, 1);
         LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
-        String period = String.format("%04d-%02d", year, month); // YYYY-MM 형식으로 변환
+        String period = String.format("%04d-%02d", year, month);
 
         // BudgetAmount 가져오기
-        BigDecimal budgetAmount = getMonthlyBudgetAmount(user, period);
+        BigDecimal budgetAmount = monthlyBudgetService.getMonthlyBudgetAmount(user, period);
 
         // 소비 및 수입 금액 계산
         BigDecimal totalExpenseAmount = expenseRepository.findTotalExpenseAmountByUserAndMonth(user, startOfMonth, endOfMonth);
@@ -65,12 +63,6 @@ public class MonthlyReportService {
                 .totalIncomeAmount(totalIncomeAmount)
                 .feedbackMessage(agentComment)
                 .build();
-    }
-
-    private BigDecimal getMonthlyBudgetAmount(User user, String period) {
-        MonthlyBudget monthlyBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
-                .orElseThrow(() -> new IllegalArgumentException("해당 월에 대한 예산 정보가 없습니다."));
-        return monthlyBudget.getFinalAmount() != null ? monthlyBudget.getFinalAmount() : monthlyBudget.getInitialAmount();
     }
 
     private String generateFeedbackMessage(BigDecimal budgetAmount, BigDecimal totalExpenseAmount) {

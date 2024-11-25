@@ -21,7 +21,7 @@ public class Expense extends BaseTimeEntity {
     private Long expenseId;
 
     @Column(nullable = false)
-    private LocalDateTime date;
+    private LocalDateTime transactionDateTime;
 
     @Column(nullable = false)
     private BigDecimal amount;
@@ -38,24 +38,27 @@ public class Expense extends BaseTimeEntity {
     @Column
     private String paymentMethod;
 
+    @Column
+    private CategoryName categoryName;
+
     /*@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "paymentMethodId", nullable = false)
     @NotNull
     private PaymentMethod paymentMethod; // 결제 수단 ID*/
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    /*@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     @NotNull
-    private Category category; // 카테고리 ID
+    private Category category; // 카테고리 ID*/
 
     @Builder
-    public Expense(LocalDateTime date, BigDecimal amount, String description,
-                   User user, String paymentMethod, Category category) {
-        this.date = date;
+    public Expense(LocalDateTime transactionDateTime, BigDecimal amount, String description,
+                   User user, String paymentMethod, CategoryName categoryName) {
+        this.transactionDateTime = transactionDateTime;
         this.amount = amount;
         this.description = description;
         this.user = user;
         this.paymentMethod = paymentMethod;
-        this.category = category;
+        this.categoryName = categoryName;
     }
 }

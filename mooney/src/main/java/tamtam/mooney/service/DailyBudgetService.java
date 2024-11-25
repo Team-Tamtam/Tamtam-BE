@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.dto.DailyBudgetRequestDto;
 import tamtam.mooney.dto.DailyBudgetResponseDto;
 import tamtam.mooney.entity.Schedule;
+import tamtam.mooney.entity.User;
 import tamtam.mooney.repository.DailyBudgetRepository;
 import tamtam.mooney.repository.ScheduleRepository;
 
@@ -22,9 +23,10 @@ public class DailyBudgetService {
     private final ScheduleRepository scheduleRepository;
 
     public DailyBudgetResponseDto getTomorrowBudgetAndSchedules(DailyBudgetRequestDto requestDto) {
+        User user = userService.getCurrentUser();
 
         // 반복 일정 조회 (반복 설정된 일정 가져오기)
-        List<Schedule> repeatedSchedules = scheduleRepository.findByIsRepeatingTrue();
+        List<Schedule> repeatedSchedules = scheduleRepository.findByUserAndIsRepeatingTrue(user);
 
         // dto에서 받은 일정 조회
         List<Schedule> tomorrowSchedules = scheduleRepository.findAllById(requestDto.getScheduleIds());
