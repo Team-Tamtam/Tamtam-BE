@@ -1,5 +1,6 @@
 package tamtam.mooney.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,6 +15,7 @@ public class GptMonthlyBudgetResponseDto {
     private List<GptScheduleDto> schedules;
 
     @Getter
+    @AllArgsConstructor
     public static class GptCategoryDto {
         private Long id;
         private String categoryName;
@@ -21,6 +23,7 @@ public class GptMonthlyBudgetResponseDto {
     }
 
     @Getter
+    @AllArgsConstructor
     public static class GptScheduleDto {
         private Long id;
         private String title;

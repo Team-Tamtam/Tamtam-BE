@@ -31,7 +31,7 @@ public class ScheduleService {
         LocalDateTime endOfTomorrow = LocalDate.now().plusDays(1).atTime(LocalTime.MAX);
 
         // 내일 일정 데이터 가져오기
-        List<Schedule> tomorrowSchedules = scheduleRepository.findByStartDateTimeBetween(startOfTomorrow, endOfTomorrow);
+        List<Schedule> tomorrowSchedules = scheduleRepository.findByUserAndStartDateTimeBetween(user, startOfTomorrow, endOfTomorrow);
 
         // 데이터가 없는 경우 기본 일정 추가
         if (tomorrowSchedules.isEmpty()) {

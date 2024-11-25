@@ -1,5 +1,6 @@
 package tamtam.mooney.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,33 +11,44 @@ import tamtam.mooney.entity.MonthlyBudget;
 import tamtam.mooney.entity.User;
 import tamtam.mooney.repository.MonthlyBudgetRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class MonthlyBudgetService {
     private final UserService userService;
     private final MonthlyBudgetRepository monthlyBudgetRepository;
 
-    @Transactional
     public MonthlyBudgetResponseDto createNextMonthBudget(MonthlyBudgetRequestDto requestDto) {
         User user = userService.getCurrentUser();
 
-        // GPT로부터 데이터 받기
-        GptMonthlyBudgetResponseDto gptResponse = null; // planNextMonthBudget(requestDto,...);
-
+        // GPT로부터 데이터 받기 (테스트 데이터)
+        GptMonthlyBudgetResponseDto gptResponse = GptMonthlyBudgetResponseDto.builder()
+                .totalBudget(requestDto.budgetAmount())
+                .categoryBudgets(Arrays.asList(
+                        new GptMonthlyBudgetResponseDto.GptCategoryDto(1L, "FOOD", new BigDecimal("350000")),
+                        new GptMonthlyBudgetResponseDto.GptCategoryDto(2L, "TRANSPORT", new BigDecimal("120000"))
+                ))
+                .schedules(Arrays.asList(
+                        new GptMonthlyBudgetResponseDto.GptScheduleDto(301L, "Business Trip", "TRANSPORT", "2024-12-05T09:00:00", "2024-12-08T18:00:00"),
+                        new GptMonthlyBudgetResponseDto.GptScheduleDto(302L, "Family Dinner", "FOOD", "2024-12-20T19:00:00", "2024-12-20T21:00:00")
+                ))
+                .build();
 
         // GPT 응답 데이터를 MonthlyBudget에 저장
         MonthlyBudget monthlyBudget = MonthlyBudget.builder()
                 .period(getNextMonthPeriod()) // 다음 달 기간 (예: "2024-12")
                 .initialAmount(gptResponse.getTotalBudget())
-                .finalAmount(gptResponse.getTotalBudget()) // 초기 값과 동일
+                .finalAmount(gptResponse.getTotalBudget())
                 .user(user)
                 .build();
 
-        monthlyBudgetRepository.save(monthlyBudget); // 저장
+        monthlyBudgetRepository.save(monthlyBudget);
 
         // 응답 데이터 변환
         return MonthlyBudgetResponseDto.builder()
@@ -69,5 +81,30 @@ public class MonthlyBudgetService {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime nextMonth = now.plusMonths(1);
         return nextMonth.getYear() + "-" + String.format("%02d", nextMonth.getMonthValue());
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getMonthlyBudgetAmount(User user, String period) {
+        MonthlyBudget monthlyBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
+                .orElseThrow(() -> new IllegalArgumentException("해당 월에 대한 예산 정보가 없습니다."));
+        return monthlyBudget.getFinalAmount() != null ? monthlyBudget.getFinalAmount() : monthlyBudget.getInitialAmount();
+    }
+
+    // 테스트 데이터
+    @PostConstruct
+    public void initMonthlyBudget() {
+        // 예시: 현재 사용자에 대해 기본 예산을 설정
+        User currentUser = userService.getCurrentUser(); // 현재 로그인한 사용자 가져오기
+
+        // 예산이 없는 경우 기본 예산을 설정
+        if (monthlyBudgetRepository.findByUserAndPeriod(currentUser, getNextMonthPeriod()).isEmpty()) {
+            MonthlyBudget defaultBudget = MonthlyBudget.builder()
+                    .period("2024-11")
+                    .initialAmount(BigDecimal.valueOf(1000000)) // 기본 예산 금액 설정
+                    .finalAmount(BigDecimal.valueOf(1000000)) // 초기값과 동일
+                    .user(currentUser)
+                    .build();
+            monthlyBudgetRepository.save(defaultBudget); // 예산 저장
+        }
     }
 }
