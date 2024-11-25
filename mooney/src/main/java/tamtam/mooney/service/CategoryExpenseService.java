@@ -24,15 +24,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CategoryExpenseService {
     private final UserService userService;
-    private final ExpenseRepository expenseRepository;
+    private final ExpenseService expenseService;
     private final MonthlyBudgetRepository monthlyBudgetRepository;
 
     public CategoryExpenseResponseDto getCategoryExpenseStats(int year, int month) {
         User user = userService.getCurrentUser();
-
-        // 이번 달의 시작 날짜와 마지막 날짜 계산
-        LocalDate startOfMonth = LocalDate.of(year, month, 1);
-        LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
         String period = String.format("%04d-%02d", year, month);
 
         // 이번 달 예산 가져오기
@@ -41,7 +37,7 @@ public class CategoryExpenseService {
         BigDecimal budgetAmountLastMonth = monthlyBudget.getFinalAmount();
 
         // 이번 달 카테고리별 총 지출 금액 가져오기
-        List<Expense> expenses = expenseRepository.findByUserAndTransactionDateTimeBetween(user, startOfMonth, endOfMonth);
+        List<Expense> expenses = expenseService.findExpensesForUser(year, month, user);
 
         // 카테고리별 지출 금액 집계
         Map<CategoryName, BigDecimal> categoryStatsMap = expenses.stream()
@@ -60,6 +56,8 @@ public class CategoryExpenseService {
                     BigDecimal percentageOfTotal = totalAmountThisMonth
                             .divide(budgetAmountLastMonth, 4, BigDecimal.ROUND_HALF_UP)
                             .multiply(BigDecimal.valueOf(100));
+
+                    percentageOfTotal = percentageOfTotal.setScale(1, BigDecimal.ROUND_HALF_UP);
 
                     // Build and return CategoryDto
                     return CategoryExpenseResponseDto.CategoryDto.builder()

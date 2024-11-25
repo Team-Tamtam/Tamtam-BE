@@ -21,13 +21,10 @@ public class Schedule extends BaseTimeEntity {
     private Long scheduleId;
 
     @Column
-    private BigDecimal predictedAmount;
+    private String title;
 
     @Enumerated(EnumType.STRING)
     private CategoryName categoryName;
-
-    @Column
-    private String title;
 
     @Column
     private LocalDateTime startDateTime;
@@ -50,6 +47,9 @@ public class Schedule extends BaseTimeEntity {
     @Column
     private Integer repeatDayOfMonth;
 
+    @Column
+    private BigDecimal predictedAmount;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", updatable = false)
     @NotNull
@@ -57,12 +57,11 @@ public class Schedule extends BaseTimeEntity {
     private User user;
 
     @Builder
-    public Schedule(BigDecimal predictedAmount, CategoryName categoryName, String title,
-                    LocalDateTime startDateTime, LocalDateTime endDateTime, String location,
-                    Boolean isRepeating, String repeatType, DayOfWeek repeatDayOfWeek, Integer repeatDayOfMonth, User user) {
-        this.predictedAmount = predictedAmount;
-        this.categoryName = categoryName;
+    public Schedule(String title, CategoryName categoryName, LocalDateTime startDateTime, LocalDateTime endDateTime,
+                    String location, Boolean isRepeating, String repeatType, DayOfWeek repeatDayOfWeek,
+                    Integer repeatDayOfMonth, BigDecimal predictedAmount, User user) {
         this.title = title;
+        this.categoryName = categoryName;
         this.startDateTime = startDateTime;
         this.endDateTime = endDateTime;
         this.location = location;
@@ -71,6 +70,7 @@ public class Schedule extends BaseTimeEntity {
         this.repeatType = (repeatType != null) ? repeatType : null;
         this.repeatDayOfWeek = (repeatDayOfWeek != null) ? repeatDayOfWeek : null;
         this.repeatDayOfMonth = (repeatDayOfMonth != null) ? repeatDayOfMonth : null;
+        this.predictedAmount = predictedAmount;
         this.user = user;
     }
 }
