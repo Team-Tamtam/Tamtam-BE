@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -26,36 +27,36 @@ public class ScheduleService {
     @Transactional
     public List<ScheduleDto> getOrInsertSchedulesForTomorrow() {
         User user = userService.getCurrentUser();
-
         LocalDateTime startOfTomorrow = LocalDate.now().plusDays(1).atStartOfDay();
         LocalDateTime endOfTomorrow = LocalDate.now().plusDays(1).atTime(LocalTime.MAX);
 
         // 내일 일정 데이터 가져오기
         List<Schedule> tomorrowSchedules = scheduleRepository.findByUserAndStartDateTimeBetween(user, startOfTomorrow, endOfTomorrow);
 
-        // 데이터가 없는 경우 기본 일정 추가
+        // 내일 일정이 없으면 기본 일정 생성 및 저장
         if (tomorrowSchedules.isEmpty()) {
-            List<Schedule> defaultSchedules = createDefaultSchedulesForTomorrow(user);
-            scheduleRepository.saveAll(defaultSchedules);
-            tomorrowSchedules = defaultSchedules;
+            tomorrowSchedules = createAndSaveDefaultSchedules(user, startOfTomorrow);
         }
 
-        // 전체 일정 반환
-        List<Schedule> allSchedules = scheduleRepository.findAll();
-
-        return allSchedules.stream()
-                .map(this::convertToDto)
+        // 내일 일정 DTO로 변환하여 반환
+        return tomorrowSchedules.stream()
+                .map(schedule -> new ScheduleDto(
+                        schedule.getScheduleId(),
+                        schedule.getTitle(),
+                        schedule.getStartDateTime(),
+                        schedule.getEndDateTime(),
+                        schedule.getLocation())
+                )
                 .collect(Collectors.toList());
     }
 
-    private List<Schedule> createDefaultSchedulesForTomorrow(User user) {
+    private List<Schedule> createAndSaveDefaultSchedules(User user, LocalDateTime startOfTomorrow) {
         List<Schedule> defaultSchedules = new ArrayList<>();
-        LocalDateTime tomorrowDate = LocalDate.now().plusDays(1).atStartOfDay();
 
         defaultSchedules.add(Schedule.builder()
                 .title("채플 시작")
-                .startDateTime(tomorrowDate.plusHours(10))
-                .endDateTime(tomorrowDate.plusHours(11))
+                .startDateTime(startOfTomorrow.plusHours(10))
+                .endDateTime(startOfTomorrow.plusHours(11))
                 .location("이화여자대학교 대강당")
                 .isRepeating(true)
                 .repeatType("WEEKLY")
@@ -64,31 +65,21 @@ public class ScheduleService {
 
         defaultSchedules.add(Schedule.builder()
                 .title("3시반 미술 전시회")
-                .startDateTime(tomorrowDate.plusHours(14))
-                .endDateTime(tomorrowDate.plusHours(16))
+                .startDateTime(startOfTomorrow.plusHours(14))
+                .endDateTime(startOfTomorrow.plusHours(16))
                 .location("그라운드시소 서촌")
                 .user(user)
                 .build());
 
         defaultSchedules.add(Schedule.builder()
                 .title("바른학원")
-                .startDateTime(tomorrowDate.plusHours(18))
-                .endDateTime(tomorrowDate.plusHours(19))
+                .startDateTime(startOfTomorrow.plusHours(18))
+                .endDateTime(startOfTomorrow.plusHours(19))
                 .location("바른학원")
                 .isRepeating(true)
                 .repeatType("WEEKLY")
                 .user(user)
                 .build());
-        return defaultSchedules;
-    }
-
-    private ScheduleDto convertToDto(Schedule schedule) {
-        return ScheduleDto.builder()
-                .scheduleId(schedule.getScheduleId())
-                .title(schedule.getTitle())
-                .startDateTime(schedule.getStartDateTime())
-                .endDateTime(schedule.getEndDateTime())
-                .location(schedule.getLocation())
-                .build();
+        return scheduleRepository.saveAll(defaultSchedules);
     }
 }

@@ -18,8 +18,12 @@ public class ExpenseService {
     private final UserService userService;
 
     @PostConstruct
-    public void initExpenses() {
+    public void initExpense() {
         User user = userService.getCurrentUser();
+        // 값이 있으면 초기화 작업을 하지 않음
+        if (expenseRepository.count() > 0) {
+            return;
+        }
 
         // `Expense` 데이터 삽입
         Expense expense1 = Expense.builder()
