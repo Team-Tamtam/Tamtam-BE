@@ -33,7 +33,7 @@ public class DailyBudgetService {
                 .map(schedule -> DailyBudgetResponseDto.RepeatedScheduleDto.builder()
                         .scheduleId(schedule.getScheduleId())
                         .title(schedule.getTitle())
-                        .categoryName(schedule.getExpenseCategory() != null ? schedule.getExpenseCategory().name() : "UNKNOWN")
+                        .categoryName(schedule.getCategoryName() != null ? schedule.getCategoryName().name() : "UNKNOWN")
                         .predictedAmount(schedule.getPredictedAmount() != null ? schedule.getPredictedAmount() : BigDecimal.ZERO)
                         .build())
                 .collect(Collectors.toList());
@@ -42,7 +42,7 @@ public class DailyBudgetService {
                 .map(schedule -> DailyBudgetResponseDto.TomorrowScheduleDto.builder()
                         .scheduleId(schedule.getScheduleId())
                         .title(schedule.getTitle())
-                        .categoryName(schedule.getExpenseCategory() != null ? schedule.getExpenseCategory().name() : "UNKNOWN")
+                        .categoryName(schedule.getCategoryName() != null ? schedule.getCategoryName().name() : "UNKNOWN")
                         .predictedAmount(schedule.getPredictedAmount() != null ? schedule.getPredictedAmount() : BigDecimal.ZERO)
                         .build())
                 .collect(Collectors.toList());

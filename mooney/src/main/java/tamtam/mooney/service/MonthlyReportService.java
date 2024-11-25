@@ -32,17 +32,17 @@ public class MonthlyReportService {
         String period = String.format("%04d-%02d", year, month); // YYYY-MM 형식으로 변환
 
         // BudgetAmount 가져오기
-        BigDecimal budgetAmount = getMonthlyBudgetAmount(user.getUserId(), period);
+        BigDecimal budgetAmount = getMonthlyBudgetAmount(user, period);
 
         // 소비 및 수입 금액 계산
-        BigDecimal totalExpenseAmount = expenseRepository.findTotalExpenseAmountByUserAndMonth(user.getUserId(), startOfMonth, endOfMonth);
+        BigDecimal totalExpenseAmount = expenseRepository.findTotalExpenseAmountByUserAndMonth(user, startOfMonth, endOfMonth);
         BigDecimal totalIncomeAmount = BigDecimal.valueOf(350000); // TODO: 스정
 
         // 피드백 메시지 생성
         String agentComment = generateFeedbackMessage(budgetAmount, totalExpenseAmount);
 
         // MonthlyReport 저장 또는 갱신
-        var existingReport = monthlyReportRepository.findByUserIdAndPeriod(user.getUserId(),  period);
+        var existingReport = monthlyReportRepository.findByUserAndPeriod(user.getUserId(),  period);
         if (existingReport.isPresent()) {
             var monthlyReport = existingReport.get();
             monthlyReport.update(budgetAmount, totalExpenseAmount, totalIncomeAmount, agentComment);
@@ -67,8 +67,8 @@ public class MonthlyReportService {
                 .build();
     }
 
-    private BigDecimal getMonthlyBudgetAmount(Long userId, String period) {
-        MonthlyBudget monthlyBudget = monthlyBudgetRepository.findByUserIdAndPeriod(userId, period)
+    private BigDecimal getMonthlyBudgetAmount(User user, String period) {
+        MonthlyBudget monthlyBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
                 .orElseThrow(() -> new IllegalArgumentException("해당 월에 대한 예산 정보가 없습니다."));
         return monthlyBudget.getFinalAmount() != null ? monthlyBudget.getFinalAmount() : monthlyBudget.getInitialAmount();
     }

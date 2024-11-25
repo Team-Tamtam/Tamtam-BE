@@ -5,6 +5,7 @@ import lombok.*;
 import tamtam.mooney.global.common.BaseTimeEntity;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -14,6 +15,9 @@ public class DailyBudget extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false)
     private Long budgetId;
+
+    @Column(nullable = false)
+    private LocalDate date;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal budgetAmount;
@@ -29,7 +33,8 @@ public class DailyBudget extends BaseTimeEntity {
     private User user;
 
     @Builder
-    public DailyBudget(BigDecimal budgetAmount, BigDecimal spentAmount, BigDecimal remainingAmount, User user) {
+    public DailyBudget(LocalDate date, BigDecimal budgetAmount, BigDecimal spentAmount, BigDecimal remainingAmount, User user) {
+        this.date = date;
         this.budgetAmount = budgetAmount;
         this.spentAmount = spentAmount;
         this.remainingAmount = remainingAmount;
