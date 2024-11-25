@@ -95,7 +95,7 @@ public class MonthlyBudgetService {
     public void initMonthlyBudget() {
         // 예시: 현재 사용자에 대해 기본 예산을 설정
         User currentUser = userService.getCurrentUser(); // 현재 로그인한 사용자 가져오기
-        
+
         // 예산이 없는 경우 기본 예산을 설정
         if (monthlyBudgetRepository.findByUserAndPeriod(currentUser, getNextMonthPeriod()).isEmpty()) {
             MonthlyBudget defaultBudget = MonthlyBudget.builder()

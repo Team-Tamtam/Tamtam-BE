@@ -4,18 +4,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.dto.MonthlyReportResponseDto;
+import tamtam.mooney.entity.Expense;
 import tamtam.mooney.entity.MonthlyReport;
 import tamtam.mooney.entity.User;
 import tamtam.mooney.repository.ExpenseRepository;
 import tamtam.mooney.repository.MonthlyReportRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class MonthlyReportService {
-    private final ExpenseRepository expenseRepository;
+    private final ExpenseService expenseService;
     private final MonthlyReportRepository monthlyReportRepository;
     private final UserService userService;
     private final MonthlyBudgetService monthlyBudgetService;
@@ -25,15 +26,14 @@ public class MonthlyReportService {
         User user = userService.getCurrentUser();
 
         // 월 시작 및 종료 날짜 계산
-        LocalDate startOfMonth = LocalDate.of(year, month, 1);
-        LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
         String period = String.format("%04d-%02d", year, month);
 
         // BudgetAmount 가져오기
         BigDecimal budgetAmount = monthlyBudgetService.getMonthlyBudgetAmount(user, period);
 
         // 소비 및 수입 금액 계산
-        BigDecimal totalExpenseAmount = expenseRepository.findTotalExpenseAmountByUserAndMonth(user, startOfMonth, endOfMonth);
+        List<Expense> expenses = expenseService.findExpensesForUser(year, month, user);
+        BigDecimal totalExpenseAmount = expenseService.calculateTotalExpenseAmount(expenses);
         BigDecimal totalIncomeAmount = BigDecimal.valueOf(350000); // TODO: 스정
 
         // 피드백 메시지 생성
