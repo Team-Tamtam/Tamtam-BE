@@ -3,7 +3,7 @@ package tamtam.mooney.dto;
 import java.time.LocalDateTime;
 
 
-public record ScheduleDto (
+public record UserScheduleDto(
         Long scheduleId,
         String title,
         LocalDateTime startDateTime,
