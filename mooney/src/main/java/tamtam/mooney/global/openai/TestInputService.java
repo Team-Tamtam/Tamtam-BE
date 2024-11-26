@@ -1,4 +1,4 @@
-package tamtam.mooney.domain.service;
+package tamtam.mooney.global.openai;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

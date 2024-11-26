@@ -1,10 +1,9 @@
-package tamtam.mooney.domain.service;
+package tamtam.mooney.global.openai;
 
 import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
-import tamtam.mooney.global.openai.OpenAIService;
 
 import java.util.List;
 import java.util.Map;
