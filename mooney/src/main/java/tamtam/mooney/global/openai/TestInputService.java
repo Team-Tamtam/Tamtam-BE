@@ -13,7 +13,50 @@ import java.util.Map;
 public class TestInputService {
     private final AIPromptService aiPromptService;
 
-    public String generateThisMonthReport() {
+    public String testBuildDailyBudget() {
+        // 1. 카테고리별 반복되는 예산 설정
+        Map<String, Object> recurringExpense = Map.of(
+                "category", "식비",
+                "remaining_budget", 25000,
+                "remaining_days", 5,
+                "per_day_amount", 5000.0,
+                "per_meal_amount", 1666.67 // 3끼 기준
+        );
+
+        // 2. 예정된 소비 일정 설정
+        List<Map<String, Object>> scheduledExpenses = new ArrayList<>();
+        scheduledExpenses.add(Map.of(
+                "time", "2024-11-12T07:16:02",
+                "description", "졸프 애들이랑 이태원",
+                "category", "문화/여가",
+                "category_budget", 70000,
+                "weighted_budget", 35000,
+                "per_event_budget", 17500,
+                "average_price_suggestion", 18000,
+                "remaining_events_in_category", 2
+        ));
+        scheduledExpenses.add(Map.of(
+                "time", "2024-11-15T20:00:00",
+                "description", "지민재현이랑 익선동 카페",
+                "category", "카페/간식",
+                "category_budget", 15000,
+                "weighted_budget", 7500,
+                "per_event_budget", 7500,
+                "average_price_suggestion", 8000,
+                "remaining_events_in_category", 1
+        ));
+
+        // 3. 전체 예산 설정
+        double totalBudget = 350000;
+
+        // 4. 카테고리 가중치 설정
+        double weightForCategory = 0.5;
+
+        // 5. buildDailyBudgetMessage 호출
+        return aiPromptService.buildDailyBudgetMessage(recurringExpense, scheduledExpenses, totalBudget, weightForCategory);
+    }
+
+    public String testBuildMonthlyReport() {
         double totalBudget = 800000;
 
         Map<String, Integer> categoryBudgets = new HashMap<>();
@@ -73,6 +116,67 @@ public class TestInputService {
         monthlyExpenses.add(Map.of("date", "2024-11-29", "category", "카페/간식", "description", "디저트 카페", "amount", 7000));
         monthlyExpenses.add(Map.of("date", "2024-11-30", "category", "문화/여가", "description", "연극 관람", "amount", 30000));
 
-        return aiPromptService.buildThisMonthReportMessages(totalBudget, categoryBudgets, monthlyExpenses);
+        return aiPromptService.buildMonthlyReportMessage(totalBudget, categoryBudgets, monthlyExpenses);
+    }
+
+    public String testBuildMonthlyBudget(String userMessage) {
+        // 1. 현재 예산 데이터 (카테고리별 예산)
+        Map<String, Integer> currentBudget = new HashMap<>();
+        currentBudget.put("경조/선물", 0);
+        currentBudget.put("교육/학습", 300000);
+        currentBudget.put("교통", 70000);
+        currentBudget.put("금융", 0);
+        currentBudget.put("문화/여가", 30000);
+        currentBudget.put("반려동물", 0);
+        currentBudget.put("뷰티/미용", 0);
+        currentBudget.put("생활", 150000);
+        currentBudget.put("술/유흥", 0);
+        currentBudget.put("식비", 250000);
+        currentBudget.put("여행/숙박", 0);
+        currentBudget.put("온라인 쇼핑", 0);
+        currentBudget.put("의료/건강", 0);
+        currentBudget.put("자녀/육아", 0);
+        currentBudget.put("자동차", 0);
+        currentBudget.put("주거/통신", 150000);
+        currentBudget.put("카페/간식", 20000);
+        currentBudget.put("패션/쇼핑", 0);
+
+        // 2. 이번 달 피드백 메시지
+        String feedbackMessage = "이번 달 예산을 잘 지키셨습니다. 특히 식비 항목에서 예산을 초과하지 않았고, 카페/간식도 적절하게 사용하셨어요.";
+
+        // 3. 고정 지출 데이터
+        List<Map<String, Object>> fixedExpenses = new ArrayList<>();
+        Map<String, Object> rentExpense = new HashMap<>();
+        rentExpense.put("category", "주거/통신");
+        rentExpense.put("amount", 150000);
+        fixedExpenses.add(rentExpense);
+
+        Map<String, Object> transportExpense = new HashMap<>();
+        transportExpense.put("category", "교통");
+        transportExpense.put("amount", 70000);
+        fixedExpenses.add(transportExpense);
+
+        // 4. 사용자 의견 (다음 달 계획)
+        String userOpinions = userMessage;
+
+        // 5. 다음 달 일정 (특별 지출 계획)
+        List<Map<String, Object>> nextMonthSchedules = new ArrayList<>();
+        Map<String, Object> holidayPlan = new HashMap<>();
+        holidayPlan.put("event", "여행");
+        holidayPlan.put("estimated_cost", 150000);
+        nextMonthSchedules.add(holidayPlan);
+
+        // 6. 총 예산
+        double totalBudget = 800000;
+
+        // 7. buildMonthlyBudgetMessage 메소드 호출
+        return aiPromptService.buildMonthlyBudgetMessage(
+                currentBudget,
+                feedbackMessage,
+                fixedExpenses,
+                userOpinions,
+                nextMonthSchedules,
+                totalBudget
+        );
     }
 }

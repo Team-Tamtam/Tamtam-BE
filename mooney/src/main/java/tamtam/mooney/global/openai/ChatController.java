@@ -9,8 +9,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChatController {
     private final TestInputService testInputService;
 
-    @GetMapping("/ai")
-    public String chat() {
-        return testInputService.generateThisMonthReport();
+    @GetMapping("/ai/tomorrow-budget")
+    public String tomorrowBudget() {
+        return testInputService.testBuildDailyBudget();
+    }
+
+    @GetMapping("/ai/this-month-report")
+    public String monthlyReport() {
+        return testInputService.testBuildMonthlyReport();
+    }
+
+    @GetMapping("/ai/next-month-budget")
+    public String monthlyBudget(String userMessage) {
+        return testInputService.testBuildMonthlyBudget(userMessage);
     }
 }
