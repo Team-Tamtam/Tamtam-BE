@@ -2,18 +2,121 @@ package tamtam.mooney.global.openai;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tamtam.mooney.global.openai.dto.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class TestInputService {
+public class AiTestInputService {
     private final AIPromptService aiPromptService;
 
-    public String testBuildDailyBudget() {
+    public String buildDailyBudgetWithRequestBody(DailyBudgetInputRequestDto requestDto) {
+        // 1. 카테고리별 반복되는 예산
+        RecurringExpenseInputDto recurringExpense = requestDto.recurringExpense();
+        Map<String, Object> recurringExpenseMap = Map.of(
+                "category", recurringExpense.category(),
+                "remaining_budget", recurringExpense.remainingBudget(),
+                "remaining_days", recurringExpense.remainingDays(),
+                "per_day_amount", recurringExpense.perDayAmount(),
+                "per_meal_amount", recurringExpense.perMealAmount()
+        );
+
+        // 2. 예정된 소비 일정 설정
+        List<ScheduledExpenseInputDto> scheduledExpenses = requestDto.scheduledExpenses();
+        List<Map<String, Object>> scheduledExpensesMapList = scheduledExpenses.stream()
+                .map(expense -> {
+                    Map<String, Object> expenseMap = new HashMap<>();
+                    expenseMap.put("time", expense.time());
+                    expenseMap.put("description", expense.description());
+                    expenseMap.put("category", expense.category());
+                    expenseMap.put("category_budget", expense.categoryBudget());
+                    expenseMap.put("weighted_budget", expense.weightedBudget());
+                    expenseMap.put("per_event_budget", expense.perEventBudget());
+                    expenseMap.put("average_price_suggestion", expense.averagePriceSuggestion());
+                    expenseMap.put("remaining_events_in_category", expense.remainingEventsInCategory());
+                    return expenseMap;
+                })
+                .toList();
+
+        // 3. 전체 예산 설정
+        double totalBudget = requestDto.totalBudget();
+
+        // 4. 카테고리 가중치 설정
+        double weightForCategory = requestDto.weightForCategory();
+
+        // 5. buildDailyBudgetMessage 호출
+        return aiPromptService.buildDailyBudgetMessage(recurringExpenseMap, scheduledExpensesMapList, totalBudget, weightForCategory);
+    }
+
+    public String buildMonthlyReportWithRequestBody(MonthlyReportInputRequestDto requestDto) {
+        // 1. 전체 예산
+        double totalBudget = requestDto.totalBudget();
+
+        // 2. 카테고리별 예산
+        Map<String, Integer> categoryBudgets = requestDto.categoryBudgets();
+        List<MonthlyExpenseInputDto> monthlyExpenses = requestDto.monthlyExpenses();
+
+        // 3. 이번 달 소비
+        List<Map<String, Object>> monthlyExpensesMapList = monthlyExpenses.stream()
+                .map(expense -> {
+                    Map<String, Object> expenseMap = new HashMap<>();
+                    expenseMap.put("date", expense.date());
+                    expenseMap.put("category", expense.category());
+                    expenseMap.put("description", expense.description());
+                    expenseMap.put("amount", expense.amount());
+                    return expenseMap;
+                })
+                .toList();
+
+        // 3. buildMonthlyReportMessage 호출
+        return aiPromptService.buildMonthlyReportMessage(totalBudget, categoryBudgets, monthlyExpensesMapList);
+    }
+
+    public String buildMonthlyBudgetWithRequestBody(MonthlyBudgetInputRequestDto requestDto, String message) {
+        // 데이터 접근
+        Map<String, Integer> currentBudget = requestDto.currentBudget();
+        String feedbackMessage = requestDto.feedbackMessage();
+
+        // FixedExpenses 변환 (List<FixedExpenseInputDto> -> List<Map<String, Object>>)
+        List<Map<String, Object>> fixedExpenses = requestDto.fixedExpenses().stream()
+                .map(fixedExpense -> {
+                    Map<String, Object> expenseMap = new HashMap<>();
+                    expenseMap.put("category", fixedExpense.category());
+                    expenseMap.put("amount", fixedExpense.amount());
+                    return expenseMap;
+                })
+                .collect(Collectors.toList());
+
+        String userOpinions = requestDto.userOpinions();
+
+        // NextMonthSchedules 변환 (List<NextMonthScheduleInputDto> -> List<Map<String, Object>>)
+        List<Map<String, Object>> nextMonthSchedules = requestDto.nextMonthSchedules().stream()
+                .map(schedule -> {
+                    Map<String, Object> scheduleMap = new HashMap<>();
+                    scheduleMap.put("event", schedule.event());
+                    scheduleMap.put("estimated_cost", schedule.estimatedCost());
+                    return scheduleMap;
+                })
+                .collect(Collectors.toList());
+
+        double totalBudget = requestDto.totalBudget();
+
+        // 기존 메서드 호출
+        return aiPromptService.buildMonthlyBudgetMessage(
+                currentBudget,
+                feedbackMessage,
+                fixedExpenses,
+                userOpinions,
+                nextMonthSchedules,
+                totalBudget
+        );
+    }
+
+    /*public String buildDailyBudgetWithTestData() {
         // 1. 카테고리별 반복되는 예산 설정
         Map<String, Object> recurringExpense = Map.of(
                 "category", "식비",
@@ -54,9 +157,9 @@ public class TestInputService {
 
         // 5. buildDailyBudgetMessage 호출
         return aiPromptService.buildDailyBudgetMessage(recurringExpense, scheduledExpenses, totalBudget, weightForCategory);
-    }
+    }*/
 
-    public String testBuildMonthlyReport() {
+    /*public String buildMonthlyReportWithTestData() {
         double totalBudget = 800000;
 
         Map<String, Integer> categoryBudgets = new HashMap<>();
@@ -117,9 +220,9 @@ public class TestInputService {
         monthlyExpenses.add(Map.of("date", "2024-11-30", "category", "문화/여가", "description", "연극 관람", "amount", 30000));
 
         return aiPromptService.buildMonthlyReportMessage(totalBudget, categoryBudgets, monthlyExpenses);
-    }
+    }*/
 
-    public String testBuildMonthlyBudget(String userMessage) {
+    /*public String buildMonthlyBudgetWithTestData(String userMessage) {
         // 1. 현재 예산 데이터 (카테고리별 예산)
         Map<String, Integer> currentBudget = new HashMap<>();
         currentBudget.put("경조/선물", 0);
@@ -178,5 +281,5 @@ public class TestInputService {
                 nextMonthSchedules,
                 totalBudget
         );
-    }
+    }*/
 }
