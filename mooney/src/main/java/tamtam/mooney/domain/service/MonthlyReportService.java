@@ -48,7 +48,7 @@ public class MonthlyReportService {
             monthlyReport.update(budgetAmount, totalExpenseAmount, totalIncomeAmount, agentComment, budgetStatus);
             monthlyReportRepository.save(monthlyReport);
         } else {
-            // 새로운 MonthlyReport 생성 시 BudgetStatus 설정
+            // 새로운 MonthlyReport 생성 시 BudgetStatus 설정F
             BudgetStatus budgetStatus = determineBudgetStatus(budgetAmount, totalExpenseAmount);
             var monthlyReport = MonthlyReport.builder()
                     .user(user)

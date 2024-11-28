@@ -1,4 +1,4 @@
-package tamtam.mooney.domain.dto;
+package tamtam.mooney.domain.dto.common;
 
 import java.time.LocalDateTime;
 

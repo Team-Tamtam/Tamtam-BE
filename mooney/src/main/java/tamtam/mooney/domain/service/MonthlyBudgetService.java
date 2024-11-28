@@ -1,20 +1,16 @@
 package tamtam.mooney.domain.service;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.dto.request.MonthlyBudgetRequestDto;
 import tamtam.mooney.domain.dto.response.MonthlyBudgetResponseDto;
-import tamtam.mooney.domain.dto.GptMonthlyBudgetResponseDto;
 import tamtam.mooney.domain.entity.MonthlyBudget;
 import tamtam.mooney.domain.entity.User;
 import tamtam.mooney.domain.repository.MonthlyBudgetRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -89,23 +85,5 @@ public class MonthlyBudgetService {
         MonthlyBudget monthlyBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
                 .orElseThrow(() -> new IllegalArgumentException("해당 월에 대한 예산 정보가 없습니다."));
         return monthlyBudget.getFinalAmount() != null ? monthlyBudget.getFinalAmount() : monthlyBudget.getInitialAmount();
-    }
-
-    // 테스트 데이터
-    @PostConstruct
-    public void initMonthlyBudget() {
-        User currentUser = userService.getCurrentUser();
-        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-        // 예산이 없는 경우 기본 예산을 설정
-        if (monthlyBudgetRepository.findByUserAndPeriod(currentUser, currentMonth).isEmpty()) {
-            MonthlyBudget defaultBudget = MonthlyBudget.builder()
-                    .period(currentMonth)
-                    .initialAmount(BigDecimal.valueOf(850000))
-                    .finalAmount(BigDecimal.valueOf(850000))
-                    .user(currentUser)
-                    .build();
-            monthlyBudgetRepository.save(defaultBudget); // 예산 저장
-        }
     }
 }
