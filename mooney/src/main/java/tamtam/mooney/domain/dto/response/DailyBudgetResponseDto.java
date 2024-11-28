@@ -1,4 +1,4 @@
-package tamtam.mooney.domain.dto;
+package tamtam.mooney.domain.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

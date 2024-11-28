@@ -6,10 +6,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tamtam.mooney.domain.dto.DailyBudgetRequestDto;
-import tamtam.mooney.domain.dto.DailyBudgetResponseDto;
-import tamtam.mooney.domain.dto.MonthlyBudgetRequestDto;
-import tamtam.mooney.domain.dto.MonthlyBudgetResponseDto;
+import tamtam.mooney.domain.dto.request.DailyBudgetRequestDto;
+import tamtam.mooney.domain.dto.response.DailyBudgetResponseDto;
+import tamtam.mooney.domain.dto.request.MonthlyBudgetRequestDto;
+import tamtam.mooney.domain.dto.response.MonthlyBudgetResponseDto;
 import tamtam.mooney.domain.service.DailyBudgetService;
 import tamtam.mooney.domain.service.MonthlyBudgetService;
 

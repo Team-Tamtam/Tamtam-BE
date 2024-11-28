@@ -3,7 +3,7 @@ package tamtam.mooney.domain.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tamtam.mooney.domain.dto.MonthlyReportResponseDto;
+import tamtam.mooney.domain.dto.response.MonthlyReportResponseDto;
 import tamtam.mooney.domain.entity.BudgetStatus;
 import tamtam.mooney.domain.entity.Expense;
 import tamtam.mooney.domain.entity.MonthlyReport;

@@ -3,8 +3,8 @@ package tamtam.mooney.domain.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tamtam.mooney.domain.dto.DailyBudgetRequestDto;
-import tamtam.mooney.domain.dto.DailyBudgetResponseDto;
+import tamtam.mooney.domain.dto.request.DailyBudgetRequestDto;
+import tamtam.mooney.domain.dto.response.DailyBudgetResponseDto;
 import tamtam.mooney.domain.entity.UserSchedule;
 import tamtam.mooney.domain.entity.User;
 import tamtam.mooney.domain.repository.DailyBudgetRepository;
@@ -29,7 +29,7 @@ public class DailyBudgetService {
         List<UserSchedule> repeatedSchedules = userScheduleRepository.findByUserAndIsRepeatingTrue(user);
 
         // dto에서 받은 일정 조회
-        List<UserSchedule> tomorrowSchedules = userScheduleRepository.findAllById(requestDto.getScheduleIds());
+        List<UserSchedule> tomorrowSchedules = userScheduleRepository.findAllById(requestDto.scheduleIds());
 
         // predictedAmount가 0인 일정은 제외
         List<DailyBudgetResponseDto.RepeatedScheduleDto> repeatedScheduleDTOs = repeatedSchedules.stream()
