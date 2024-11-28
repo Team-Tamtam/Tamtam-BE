@@ -76,7 +76,7 @@ public class AiTestInputService {
         return aiPromptService.buildMonthlyReportMessage(totalBudget, categoryBudgets, monthlyExpensesMapList);
     }
 
-    public String buildMonthlyBudgetWithRequestBody(MonthlyBudgetInputRequestDto requestDto, String message) {
+    public String buildMonthlyBudgetWithRequestBody(MonthlyBudgetInputRequestDto requestDto) {
         // 데이터 접근
         Map<String, Integer> currentBudget = requestDto.currentBudget();
         String feedbackMessage = requestDto.feedbackMessage();

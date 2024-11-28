@@ -28,7 +28,7 @@ public class AITestInputController {
     }
 
     @GetMapping("/next-month-budget")
-    public String monthlyBudget(@RequestBody MonthlyBudgetInputRequestDto requestDto, String userMessage) {
-        return aiTestInputService.buildMonthlyBudgetWithRequestBody(requestDto, userMessage);
+    public String monthlyBudget(@RequestBody MonthlyBudgetInputRequestDto requestDto) {
+        return aiTestInputService.buildMonthlyBudgetWithRequestBody(requestDto);
     }
 }
