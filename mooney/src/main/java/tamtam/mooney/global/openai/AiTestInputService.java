@@ -1,6 +1,7 @@
 package tamtam.mooney.global.openai;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tamtam.mooney.global.openai.dto.*;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiTestInputService {
@@ -17,7 +19,7 @@ public class AiTestInputService {
 
     public String buildDailyBudgetWithRequestBody(DailyBudgetInputRequestDto requestDto) {
         // 1. 반복 일정
-        List<RecurringExpenseInputDto> recurringExpense = requestDto.recurringExpense();
+        List<RecurringExpenseInputDto> recurringExpense = requestDto.recurringExpenses();
         List<Map<String, Object>> recurringExpenseMap = recurringExpense.stream()
                 .map(expense -> {
                     Map<String, Object> expenseMap = new HashMap<>();
@@ -54,7 +56,10 @@ public class AiTestInputService {
         double weightForCategory = requestDto.weightForCategory();
 
         // 5. buildDailyBudgetMessage 호출
-        return aiPromptService.buildDailyBudgetMessage(recurringExpenseMap, scheduledExpensesMapList, totalBudget, weightForCategory);
+        String message = aiPromptService.buildDailyBudgetMessage(recurringExpenseMap, scheduledExpensesMapList, totalBudget, weightForCategory);
+        log.info("message: ");
+
+        return message;
     }
 
     public String buildMonthlyReportWithRequestBody(MonthlyReportInputRequestDto requestDto) {

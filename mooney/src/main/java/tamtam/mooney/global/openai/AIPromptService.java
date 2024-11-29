@@ -1,6 +1,7 @@
 package tamtam.mooney.global.openai;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AIPromptService {
@@ -16,14 +18,14 @@ public class AIPromptService {
 
     /**
      * 기능 1 - 이번 달 예산과 소비를 분석하여 일일 예산을 계산하고 결과 메시지를 만듭니다.
-     * @param recurringExpense 식비와 같은 반복적인 카테고리 예산 (List 형식)
+     * @param recurringExpenses 식비와 같은 반복적인 카테고리 예산 (List 형식)
      * @param scheduledExpenses 특정 일정에 대한 소비 예산 (List 형식)
      * @param totalBudget 전체 예산 (double 형식)
      * @param weightForCategory 카테고리별 예산 계산에 사용할 가중치 (double 형식)
      * @return 계산된 일일 예산을 포함한 피드백 메시지 내용이 담긴 String
      */
     public String buildDailyBudgetMessage(
-            List<Map<String, Object>> recurringExpense,
+            List<Map<String, Object>> recurringExpenses,
             List<Map<String, Object>> scheduledExpenses,
             BigDecimal totalBudget,
             double weightForCategory
@@ -66,7 +68,7 @@ public class AIPromptService {
         JSONObject budgetData = new JSONObject()
                 .put("weight_for_category", weightForCategory)
                 .put("total_remaining_budget", totalBudget)
-                .put("recurring_expense", new JSONArray(recurringExpense))
+                .put("recurring_expenses", new JSONArray(recurringExpenses))
                 .put("scheduled_expenses", new JSONArray(scheduledExpenses));
         userContentObject2.put("type", "text");
         userContentObject2.put("text", "Provided Data: \n" + budgetData);
@@ -100,7 +102,7 @@ public class AIPromptService {
 
         JSONObject parameters = new JSONObject();
         parameters.put("type", "object");
-        parameters.put("required", new JSONArray(List.of("recurring_expense", "scheduled_expenses", "daily_budget_total")));
+        parameters.put("required", new JSONArray(List.of("recurring_expenses", "scheduled_expenses", "daily_budget_total")));
 
         JSONObject recurringExpenseSchema = new JSONObject();
         recurringExpenseSchema.put("type", "object");
@@ -129,9 +131,9 @@ public class AIPromptService {
 
         // parameters에 "required" 및 "properties" 추가
         parameters.put("type", "object");
-        parameters.put("required", new JSONArray(List.of("recurring_expense", "scheduled_expenses", "daily_budget_total")));
+        parameters.put("required", new JSONArray(List.of("recurring_expenses", "scheduled_expenses", "daily_budget_total")));
         parameters.put("properties", new JSONObject()
-                .put("recurring_expense", recurringExpenseSchema)
+                .put("recurring_expenses", recurringExpenseSchema)
                 .put("scheduled_expenses", scheduledExpensesSchema)
                 .put("daily_budget_total", new JSONObject().put("type", "number")));
 
@@ -147,7 +149,9 @@ public class AIPromptService {
         messages.put(new JSONObject().put("tools", tools));
 
         // OpenAI 서비스 호출 및 결과 반환
-        return openAIService.generateGPTResponse(messages, 0.7, 2048, 1, 0, 0);
+        String result = openAIService.generateGPTResponse(messages, 0.7, 2048, 1, 0, 0);
+        log.info(result);
+        return result;
     }
 
     /**

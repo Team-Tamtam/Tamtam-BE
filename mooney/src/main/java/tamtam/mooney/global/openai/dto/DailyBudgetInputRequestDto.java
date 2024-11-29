@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record DailyBudgetInputRequestDto (
-        List<RecurringExpenseInputDto> recurringExpense,
+        List<RecurringExpenseInputDto> recurringExpenses,
         List<ScheduledExpenseInputDto> scheduledExpenses,
         BigDecimal totalBudget,
         double weightForCategory

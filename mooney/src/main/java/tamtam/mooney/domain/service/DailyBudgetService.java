@@ -63,10 +63,10 @@ public class DailyBudgetService {
                         .noneMatch(repeatedSchedule -> repeatedSchedule.getScheduleId().equals(schedule.getScheduleId())))
                 .map(schedule -> {
                     Map<String, Object> expense = new HashMap<>();
-                    expense.put("scheduleId", schedule.getScheduleId());
+                    expense.put("schedule_id", schedule.getScheduleId());
                     expense.put("title", schedule.getTitle());
                     expense.put("category", schedule.getCategoryName() != null ? schedule.getCategoryName().name() : "UNKNOWN");
-                    expense.put("predictedAmount", schedule.getPredictedAmount());
+                    expense.put("predicted_amount", schedule.getPredictedAmount());
                     return expense;
                 })
                 .toList();
@@ -101,9 +101,9 @@ public class DailyBudgetService {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(jsonResponse);
 
-        // JSON에서 recurring_expense와 scheduled_expenses 추출
+        // JSON에서 recurring_expenses와 scheduled_expenses 추출
         List<Map<String, Object>> recurringExpenseData = objectMapper.convertValue(
-                rootNode.get("recurring_expense"),
+                rootNode.get("recurring_expenses"),
                 new TypeReference<List<Map<String, Object>>>() {}
         );
         List<Map<String, Object>> scheduledExpenseData = objectMapper.convertValue(
