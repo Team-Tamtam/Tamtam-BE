@@ -58,8 +58,7 @@ public class AiTestInputService {
         double weightForCategory = requestDto.weightForCategory();
 
         // 5. buildDailyBudgetMessage 호출
-        String message = aiPromptService.buildDailyBudgetMessage(
-                LocalDate.now().plusDays(1), recurringExpenseMapList, scheduledExpensesMapList, totalBudget, weightForCategory);
+        String message = aiPromptService.buildDailyBudgetMessage(LocalDate.now().plusDays(1), scheduledExpensesMapList, totalBudget, weightForCategory);
         log.info("message: ");
 
         return message;

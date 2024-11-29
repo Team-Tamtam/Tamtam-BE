@@ -1,36 +1,15 @@
 package tamtam.mooney.domain.dto;
 
+import lombok.Getter;
+import lombok.Setter;
 import tamtam.mooney.domain.entity.UserSchedule;
 
 import java.util.List;
 
+@Getter
+@Setter
 public class MergeSchedulesRequest {
-    private List<UserSchedule> repeatedSchedules;
+    // Getters and setters
     private List<UserSchedule> tomorrowSchedules;
     private String jsonResponse;
-
-    // Getters and setters
-    public List<UserSchedule> getRepeatedSchedules() {
-        return repeatedSchedules;
-    }
-
-    public void setRepeatedSchedules(List<UserSchedule> repeatedSchedules) {
-        this.repeatedSchedules = repeatedSchedules;
-    }
-
-    public List<UserSchedule> getTomorrowSchedules() {
-        return tomorrowSchedules;
-    }
-
-    public void setTomorrowSchedules(List<UserSchedule> tomorrowSchedules) {
-        this.tomorrowSchedules = tomorrowSchedules;
-    }
-
-    public String getJsonResponse() {
-        return jsonResponse;
-    }
-
-    public void setJsonResponse(String jsonResponse) {
-        this.jsonResponse = jsonResponse;
-    }
 }

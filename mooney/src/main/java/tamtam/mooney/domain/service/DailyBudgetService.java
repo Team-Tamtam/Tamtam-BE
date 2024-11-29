@@ -36,29 +36,14 @@ public class DailyBudgetService {
     @Transactional(readOnly = true)
     public DailyBudgetResponseDto getTomorrowBudgetAndSchedules(DailyBudgetRequestDto requestDto) {
         User user = userService.getCurrentUser();
-        // 반복 일정 조회 (조건 체크 생략)
-        List<UserSchedule> repeatedSchedules = userScheduleRepository.findByUserAndIsRepeatingTrue(user);
+
         // DTO에서 받은 내일 일정 조회
         List<UserSchedule> tomorrowSchedules = userScheduleRepository.findAllById(requestDto.scheduleIds());
-
-        // 반복 일정 데이터 구성
-        List<Map<String, Object>> repeatedScheduleMapList = repeatedSchedules.stream()
-                .filter(schedule -> schedule.getPredictedAmount() != null && schedule.getPredictedAmount().compareTo(BigDecimal.ZERO) > 0)
-                .map(schedule -> {
-                    Map<String, Object> expense = new HashMap<>();
-                    expense.put("scheduleId", schedule.getScheduleId());
-                    expense.put("title", schedule.getTitle());
-                    expense.put("category", schedule.getCategoryName() != null ? schedule.getCategoryName().name() : "UNKNOWN");
-                    expense.put("predictedAmount", schedule.getPredictedAmount());
-                    return expense;
-                })
-                .toList();
+        // TODO: 추후 일정 반복 체크해 추기
 
         // 내일 일정 데이터 구성
         List<Map<String, Object>> tomorrowScheduleMapList = tomorrowSchedules.stream()
                 .filter(schedule -> schedule.getPredictedAmount() != null && schedule.getPredictedAmount().compareTo(BigDecimal.ZERO) > 0)
-                .filter(schedule -> repeatedSchedules.stream()
-                        .noneMatch(repeatedSchedule -> repeatedSchedule.getScheduleId().equals(schedule.getScheduleId())))
                 .map(schedule -> {
                     Map<String, Object> expense = new HashMap<>();
                     expense.put("schedule_id", schedule.getScheduleId());
@@ -84,7 +69,6 @@ public class DailyBudgetService {
 
         String aiResponse = aiPromptService.buildDailyBudgetMessage(
                 tomorrow,
-                repeatedScheduleMapList,
                 tomorrowScheduleMapList,
                 totalBudget,
                 weightForCategory
@@ -93,14 +77,13 @@ public class DailyBudgetService {
 
         try {
             JSONObject jsonObject = new JSONObject(aiResponse);
-            return mergeSchedulesWithJsonData(repeatedSchedules, tomorrowSchedules, aiResponse);
+            return mergeSchedulesWithJsonData(tomorrowSchedules, aiResponse);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
     public DailyBudgetResponseDto mergeSchedulesWithJsonData(
-            List<UserSchedule> repeatedSchedules,
             List<UserSchedule> tomorrowSchedules,
             String jsonResponse
     ) throws Exception {
@@ -136,8 +119,6 @@ public class DailyBudgetService {
         List<DailyBudgetResponseDto.TomorrowScheduleDto> tomorrowScheduleDtos = Optional.ofNullable(tomorrowSchedules)
                 .orElse(Collections.emptyList()) // 내일 일정이 없을 경우 빈 리스트 처리
                 .stream()
-                .filter(schedule -> repeatedSchedules.stream()
-                        .noneMatch(repeated -> repeated.getScheduleId().equals(schedule.getScheduleId())))
                 .map(schedule -> {
                     // JSON 데이터에서 일치하는 설명을 찾아 병합
                     Map<String, Object> jsonExpense = scheduledExpenseData.stream()
