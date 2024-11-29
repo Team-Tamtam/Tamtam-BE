@@ -72,12 +72,13 @@ public class UserSchedule extends BaseTimeEntity {
         this.repeatDayOfMonth = (repeatDayOfMonth != null) ? repeatDayOfMonth : null;
         this.user = user;
     }
-    public void setCategoryNameAndPredictedAmount(BigDecimal predictedAmount, CategoryName categoryName) {
-        if (predictedAmount != null) {
-            this.predictedAmount = predictedAmount;
-        }
+
+    public void setCategoryNameAndPredictedAmount(CategoryName categoryName, BigDecimal predictedAmount) {
         if (categoryName != null) {
             this.categoryName = categoryName;
+        }
+        if (predictedAmount != null) {
+            this.predictedAmount = predictedAmount;
         }
     }
 }

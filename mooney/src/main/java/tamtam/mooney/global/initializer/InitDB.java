@@ -160,7 +160,7 @@ public class InitDB {
     private void createAndSaveDefaultSchedules(User user, LocalDateTime startOfTomorrow) {
         List<UserSchedule> defaultSchedules = new ArrayList<>();
 
-        defaultSchedules.add(UserSchedule.builder()
+        UserSchedule schedule1 = UserSchedule.builder()
                 .title("채플 시작")
                 .startDateTime(startOfTomorrow.plusHours(10))
                 .endDateTime(startOfTomorrow.plusHours(11))
@@ -168,17 +168,22 @@ public class InitDB {
                 .isRepeating(true)
                 .repeatType("WEEKLY")
                 .user(user)
-                .build());
+                .build();
+        schedule1.setCategoryNameAndPredictedAmount(CategoryName.EDUCATION, BigDecimal.ZERO);
+        defaultSchedules.add(schedule1);
 
-        defaultSchedules.add(UserSchedule.builder()
+        UserSchedule schedule2 = UserSchedule.builder()
                 .title("3시반 미술 전시회")
                 .startDateTime(startOfTomorrow.plusHours(14))
                 .endDateTime(startOfTomorrow.plusHours(16))
                 .location("그라운드시소 서촌")
                 .user(user)
-                .build());
+                .build();
+        schedule2.setCategoryNameAndPredictedAmount(CategoryName.ENTERTAINMENT, BigDecimal.valueOf(15000L));
+        defaultSchedules.add(schedule2);
 
-        defaultSchedules.add(UserSchedule.builder()
+        // 세 번째 스케줄 추가
+        UserSchedule schedule3 = UserSchedule.builder()
                 .title("바른학원")
                 .startDateTime(startOfTomorrow.plusHours(18))
                 .endDateTime(startOfTomorrow.plusHours(19))
@@ -186,7 +191,9 @@ public class InitDB {
                 .isRepeating(true)
                 .repeatType("WEEKLY")
                 .user(user)
-                .build());
+                .build();
+        schedule3.setCategoryNameAndPredictedAmount(CategoryName.EDUCATION, BigDecimal.valueOf(50000L));
+        defaultSchedules.add(schedule3);
 
         // Save all default schedules
         userScheduleRepository.saveAll(defaultSchedules);
