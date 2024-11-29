@@ -71,8 +71,11 @@ public class InitDB {
             // 날짜 범위와 사용자의 정보를 로그로 출력
             log.info("사용자 {}의 이번 달 지출 확인: {}부터 {}까지", user.getNickname(), startOfMonth, endOfMonth);
 
+            LocalDateTime startDateTime = startOfMonth.atStartOfDay(); // 첫 번째 날짜의 00:00시로 변환
+            LocalDateTime endDateTime = endOfMonth.atTime(23, 59, 59, 999999999); // 마지막 날짜의 마지막 순간 (23:59:59.999999999)
+
             // 이번 달의 총 지출 금액 가져오기
-            BigDecimal totalExpenseThisMonth = expenseRepository.findTotalExpenseAmountByUserAndMonth(user, startOfMonth, endOfMonth);
+            BigDecimal totalExpenseThisMonth = expenseRepository.findTotalExpenseAmountByUserAndMonth(user, startDateTime, endDateTime);
             log.info("이번 달의 총 지출 금액: {}", totalExpenseThisMonth);
 
             // 이번 달에 지출이 있으면 초기화 작업을 하지 않음
