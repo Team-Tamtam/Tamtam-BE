@@ -16,15 +16,19 @@ public class AiTestInputService {
     private final AIPromptService aiPromptService;
 
     public String buildDailyBudgetWithRequestBody(DailyBudgetInputRequestDto requestDto) {
-        // 1. 카테고리별 반복되는 예산
-        RecurringExpenseInputDto recurringExpense = requestDto.recurringExpense();
-        Map<String, Object> recurringExpenseMap = Map.of(
-                "category", recurringExpense.category(),
-                "remaining_budget", recurringExpense.remainingBudget(),
-                "remaining_days", recurringExpense.remainingDays(),
-                "per_day_amount", recurringExpense.perDayAmount(),
-                "per_meal_amount", recurringExpense.perMealAmount()
-        );
+        // 1. 반복 일정
+        List<RecurringExpenseInputDto> recurringExpense = requestDto.recurringExpense();
+        List<Map<String, Object>> recurringExpenseMap = recurringExpense.stream()
+                .map(expense -> {
+                    Map<String, Object> expenseMap = new HashMap<>();
+                    expenseMap.put("category", expense.category());
+                    expenseMap.put("remaining_budget", expense.remainingBudget());
+                    expenseMap.put("remaining_days", expense.remainingDays());
+                    expenseMap.put("per_day_amount", expense.perDayAmount());
+                    expenseMap.put("per_meal_amount", expense.perMealAmount());
+                    return expenseMap;
+                })
+                .toList();
 
         // 2. 예정된 소비 일정 설정
         List<ScheduledExpenseInputDto> scheduledExpenses = requestDto.scheduledExpenses();
@@ -44,7 +48,7 @@ public class AiTestInputService {
                 .toList();
 
         // 3. 전체 예산 설정
-        double totalBudget = requestDto.totalBudget();
+        BigDecimal totalBudget = requestDto.totalBudget();
 
         // 4. 카테고리 가중치 설정
         double weightForCategory = requestDto.weightForCategory();

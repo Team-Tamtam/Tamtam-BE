@@ -16,16 +16,16 @@ public class AIPromptService {
 
     /**
      * 기능 1 - 이번 달 예산과 소비를 분석하여 일일 예산을 계산하고 결과 메시지를 만듭니다.
-     * @param recurringExpense 식비와 같은 반복적인 카테고리 예산 (Map 형식)
+     * @param recurringExpense 식비와 같은 반복적인 카테고리 예산 (List 형식)
      * @param scheduledExpenses 특정 일정에 대한 소비 예산 (List 형식)
      * @param totalBudget 전체 예산 (double 형식)
      * @param weightForCategory 카테고리별 예산 계산에 사용할 가중치 (double 형식)
      * @return 계산된 일일 예산을 포함한 피드백 메시지 내용이 담긴 String
      */
     public String buildDailyBudgetMessage(
-            Map<String, Object> recurringExpense,
+            List<Map<String, Object>> recurringExpense,
             List<Map<String, Object>> scheduledExpenses,
-            double totalBudget,
+            BigDecimal totalBudget,
             double weightForCategory
     ) {
         // GPT 모델이 분석할 프롬프트 정의
@@ -63,7 +63,7 @@ public class AIPromptService {
         JSONObject budgetData = new JSONObject()
                 .put("weight_for_category", weightForCategory)
                 .put("total_remaining_budget", totalBudget)
-                .put("recurring_expense", new JSONObject(recurringExpense))
+                .put("recurring_expense", new JSONArray(recurringExpense))
                 .put("scheduled_expenses", new JSONArray(scheduledExpenses));
 
         userContentObject2.put("type", "text");
