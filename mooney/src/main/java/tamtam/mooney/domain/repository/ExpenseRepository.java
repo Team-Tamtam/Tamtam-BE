@@ -14,8 +14,8 @@ import java.util.List;
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e " +
             "WHERE e.user = :user AND e.transactionDateTime BETWEEN :startDateTime AND :endDateTime")
-    BigDecimal findTotalExpenseAmountByUserAndMonth(@Param("user") User user,
-                                                    @Param("startOfMonth") LocalDateTime startDateTime,
-                                                    @Param("endOfMonth") LocalDateTime endDateTime);
+    BigDecimal findTotalExpenseAmountByUserAndMonth(User user,
+                                                    @Param("startDateTime") LocalDateTime startDateTime,
+                                                    @Param("endDateTime") LocalDateTime endDateTime);
     List<Expense> findByUserAndTransactionDateTimeBetween(User user, LocalDateTime startDateTime, LocalDateTime endDateTime);
 }
