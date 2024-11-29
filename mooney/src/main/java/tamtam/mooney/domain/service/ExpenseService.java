@@ -10,7 +10,9 @@ import tamtam.mooney.domain.repository.ExpenseRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -33,5 +35,18 @@ public class ExpenseService {
                 .map(Expense::getAmount)  // 각 Expense 객체의 amount를 가져옴
                 .filter(amount -> amount != null)  // null 값이 있을 경우 필터링
                 .reduce(BigDecimal.ZERO, BigDecimal::add);  // 합산, 초기값은 0
+    }
+
+    public Map<String, BigDecimal> categorizeExpensesByCategory(List<Expense> expenses) {
+        Map<String, BigDecimal> categorizedExpenses = new HashMap<>();
+
+        for (Expense expense : expenses) {
+            String categoryName = expense.getCategoryName().getDescription();
+            BigDecimal amount = expense.getAmount();
+
+            // Accumulate the expenses for each category
+            categorizedExpenses.put(categoryName, categorizedExpenses.getOrDefault(categoryName,  BigDecimal.ZERO).add(amount));
+        }
+        return categorizedExpenses;
     }
 }

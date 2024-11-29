@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tamtam.mooney.global.openai.dto.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,27 +54,16 @@ public class AiTestInputService {
     }
 
     public String buildMonthlyReportWithRequestBody(MonthlyReportInputRequestDto requestDto) {
-        // 1. 전체 예산
-        double totalBudget = requestDto.totalBudget();
+        // 1. 전체
+        BigDecimal totalBudgetAmount = requestDto.totalBudgetAmount();
+        BigDecimal totalExpenseAmount = requestDto.totalExpenseAmount();
 
-        // 2. 카테고리별 예산
-        Map<String, Integer> categoryBudgets = requestDto.categoryBudgets();
-        List<MonthlyExpenseInputDto> monthlyExpenses = requestDto.monthlyExpenses();
-
-        // 3. 이번 달 소비
-        List<Map<String, Object>> monthlyExpensesMapList = monthlyExpenses.stream()
-                .map(expense -> {
-                    Map<String, Object> expenseMap = new HashMap<>();
-                    expenseMap.put("date", expense.date());
-                    expenseMap.put("category", expense.category());
-                    expenseMap.put("description", expense.description());
-                    expenseMap.put("amount", expense.amount());
-                    return expenseMap;
-                })
-                .toList();
+        // 2. 카테고리별
+        Map<String, BigDecimal> categoryBudgets = requestDto.categoryBudgets();
+        Map<String, BigDecimal> categoryExpenses = requestDto.categoryExpenses();
 
         // 3. buildMonthlyReportMessage 호출
-        return aiPromptService.buildMonthlyReportMessage(totalBudget, categoryBudgets, monthlyExpensesMapList);
+        return aiPromptService.buildMonthlyReportMessage(totalBudgetAmount, categoryBudgets, totalExpenseAmount, categoryExpenses);
     }
 
     public String buildMonthlyBudgetWithRequestBody(MonthlyBudgetInputRequestDto requestDto) {

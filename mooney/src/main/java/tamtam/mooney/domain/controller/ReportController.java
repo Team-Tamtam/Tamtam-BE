@@ -20,16 +20,16 @@ public class ReportController {
 
     @Operation(summary = "월 소비 피드백 가져오기")
     @PostMapping("/monthly")
-    public ResponseEntity<?> getMonthlyExpenseReport(@RequestParam final int year,
-                                                     @RequestParam final int month) {
+    public ResponseEntity<?> getMonthlyExpenseReport(@RequestParam(name = "year") final int year,
+                                                     @RequestParam(name = "month") final int month) {
         MonthlyReportResponseDto responseDto = monthlyReportService.getMonthlyReport(year, month);
         return ResponseEntity.ok(responseDto);
     }
 
     @Operation(summary = "월 소비 카테고리 별 퍼센트, 지난 달 반영 예산값 가져오기")
     @PostMapping("/categories")
-    public ResponseEntity<?> getCategoryExpenseStats(@RequestParam final int year,
-                                                     @RequestParam final int month) {
+    public ResponseEntity<?> getCategoryExpenseStats(@RequestParam(name = "year") final int year,
+                                                     @RequestParam(name = "month") final int month) {
         CategoryExpenseResponseDto responseDto = categoryExpenseService.getCategoryExpenseStats(year, month);
         return ResponseEntity.ok(responseDto);
     }
