@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.dto.request.DailyBudgetRequestDto;
 import tamtam.mooney.domain.dto.response.DailyBudgetResponseDto;
+import tamtam.mooney.domain.entity.CategoryName;
 import tamtam.mooney.domain.entity.MonthlyBudget;
 import tamtam.mooney.domain.entity.UserSchedule;
 import tamtam.mooney.domain.entity.User;
@@ -21,6 +22,7 @@ import tamtam.mooney.global.openai.AIPromptService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,33 +106,26 @@ public class DailyBudgetService {
         // JSON에서 recurring_expenses와 scheduled_expenses 추출
         List<Map<String, Object>> recurringExpenseData = objectMapper.convertValue(
                 rootNode.get("recurring_expenses"),
-                new TypeReference<List<Map<String, Object>>>() {}
+                new TypeReference<>() {}
         );
         List<Map<String, Object>> scheduledExpenseData = objectMapper.convertValue(
                 rootNode.get("scheduled_expenses"),
-                new TypeReference<List<Map<String, Object>>>() {}
+                new TypeReference<>() {}
         );
 
-        // 반복 일정 데이터 매핑
-        List<DailyBudgetResponseDto.RepeatedScheduleDto> repeatedScheduleDtos = repeatedSchedules.stream()
-                .map(schedule -> {
-                    // JSON 데이터에서 일치하는 카테고리를 찾아 병합
-                    Map<String, Object> jsonExpense = recurringExpenseData.stream()
-                            .filter(expense -> schedule.getCategoryName().name().equals(expense.get("category")))
-                            .findFirst()
-                            .orElse(null);
+        // 반복 소비 데이터 매핑
+        List<DailyBudgetResponseDto.RepeatedScheduleDto> repeatedScheduleDtos = recurringExpenseData.stream()
+                .map(expense -> {
+                    // 카테고리, 하루 예산 금액(예상 금액) 및 기타 필요한 필드 가져오기
+                    String category = (String) expense.get("category");
+                    BigDecimal perDayAmount = new BigDecimal(String.valueOf(expense.get("per_day_amount")));
 
-                    // 예산 값을 JSON에서 가져오거나 기존 값을 사용
-                    BigDecimal predictedAmount = (jsonExpense != null)
-                            ? new BigDecimal(String.valueOf(jsonExpense.get("today_amount")))
-                            : schedule.getPredictedAmount();
-
-                    return DailyBudgetResponseDto.RepeatedScheduleDto.builder()
-                            .scheduleId(schedule.getScheduleId())
-                            .title(schedule.getTitle())
-                            .categoryName(schedule.getCategoryName() != null ? schedule.getCategoryName().name() : "UNKNOWN")
-                            .predictedAmount(predictedAmount)
-                            .build();
+                    return new DailyBudgetResponseDto.RepeatedScheduleDto(
+                            null,  // scheduleId는 현재 null로 설정
+                            category,  // title은 카테고리 이름으로 설정
+                            category,  // categoryName도 카테고리 이름으로 설정
+                            perDayAmount  // predictedAmount는 하루 예산 금액으로 설정
+                    );
                 })
                 .collect(Collectors.toList());
 
@@ -141,19 +136,19 @@ public class DailyBudgetService {
                 .map(schedule -> {
                     // JSON 데이터에서 일치하는 설명을 찾아 병합
                     Map<String, Object> jsonExpense = scheduledExpenseData.stream()
-                            .filter(expense -> schedule.getTitle().equals(expense.get("description")))
+                            .filter(data -> schedule.getTitle().equals(data.get("description")))
                             .findFirst()
                             .orElse(null);
 
                     // 예산 값을 JSON에서 가져오거나 기존 값을 사용
-                    BigDecimal predictedAmount = (jsonExpense != null)
-                            ? new BigDecimal(String.valueOf(jsonExpense.get("amount")))
+                    BigDecimal predictedAmount = (jsonExpense != null && jsonExpense.get("weighted_budget") != null)
+                            ? new BigDecimal(String.valueOf(jsonExpense.get("weighted_budget")))
                             : schedule.getPredictedAmount();
 
                     return DailyBudgetResponseDto.TomorrowScheduleDto.builder()
                             .scheduleId(schedule.getScheduleId())
                             .title(schedule.getTitle())
-                            .categoryName(schedule.getCategoryName() != null ? schedule.getCategoryName().name() : "UNKNOWN")
+                            .categoryName(schedule.getCategoryName() != null ? schedule.getCategoryName().getDescription() : "기타")
                             .predictedAmount(predictedAmount)
                             .build();
                 })
