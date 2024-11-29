@@ -42,15 +42,19 @@ public class AIPromptService {
         JSONObject systemMessage = createSystemMessage(GPT_PROMPT);
         messages.put(systemMessage);
 
+
         // User Role 메시지 1
         JSONObject userMessage1 = new JSONObject();
         userMessage1.put("role", "user");
+
         JSONArray userContent1 = new JSONArray();
         JSONObject userContentObject1 = new JSONObject();
         userContentObject1.put("type", "text");
         userContentObject1.put("text", "I am providing budget data for the assistant to calculate my daily budget for November 11, 2024. My goal is to divide expenses between recurring categories (like meals) and specific scheduled events. Here’s a detailed breakdown: Recurring Expense: 식비 The \"식비\" category has a remaining budget of ₩250,000, and there are 20 days left in the month. Please divide this budget evenly across the remaining days and calculate a per-meal amount, assuming three meals per day. Scheduled Expenses In addition to recurring expenses, there are specific scheduled events for which I need an expense estimate. Here's how to handle these: Event Categorization: Please categorize the event \"졸프 애들이랑 이태원\" appropriately if possible. Otherwise, provide an option for me to choose later. Budget Allocation: Each event should receive a budget by dividing the remaining budget of its category by the number of remaining events in that category. Example: \"교육/학습\" has a remaining budget of ₩10,000, and there is 1 event in this category. \"문화/여가\" has a remaining budget of ₩70,000, and there are 2 events in this category. Price Suggestions: Include external price suggestions (e.g., average costs for similar activities among people in their 20s) if available. Combine the calculated category-based budget with the external price suggestion using the specified weight. The default weight is 0.5 for each unless I specify otherwise.");
+
         userContent1.put(userContentObject1);
         userMessage1.put("content", userContent1);
+
 
         // User Role 메시지 2 (Budget Data)
         JSONObject userMessage2 = new JSONObject();
@@ -58,19 +62,18 @@ public class AIPromptService {
 
         JSONArray userContent2 = new JSONArray();
         JSONObject userContentObject2 = new JSONObject();
-
         // 사용자의 예산 데이터를 JSON으로 구성
         JSONObject budgetData = new JSONObject()
                 .put("weight_for_category", weightForCategory)
                 .put("total_remaining_budget", totalBudget)
                 .put("recurring_expense", new JSONArray(recurringExpense))
                 .put("scheduled_expenses", new JSONArray(scheduledExpenses));
-
         userContentObject2.put("type", "text");
         userContentObject2.put("text", "Provided Data: \n" + budgetData);
 
         userContent2.put(userContentObject2);
         userMessage2.put("content", userContent2);
+
 
         // Assistant Role 메시지
         JSONObject assistantMessage = new JSONObject();
@@ -124,13 +127,18 @@ public class AIPromptService {
                         .put("average_price_suggestion", new JSONObject().put("type", "number"))
                         .put("remaining_events_in_category", new JSONObject().put("type", "integer"))));
 
+        // parameters에 "required" 및 "properties" 추가
+        parameters.put("type", "object");
+        parameters.put("required", new JSONArray(List.of("recurring_expense", "scheduled_expenses", "daily_budget_total")));
         parameters.put("properties", new JSONObject()
                 .put("recurring_expense", recurringExpenseSchema)
                 .put("scheduled_expenses", scheduledExpensesSchema)
                 .put("daily_budget_total", new JSONObject().put("type", "number")));
 
+        // functionDetails에 parameters 포함
         functionDetails.put("parameters", parameters);
 
+        // tools 배열 구성
         JSONArray tools = new JSONArray();
         tools.put(new JSONObject().put("type", "function").put("function", functionDetails));
 
