@@ -5,14 +5,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.dto.request.DailyBudgetRequestDto;
 import tamtam.mooney.domain.dto.response.DailyBudgetResponseDto;
-import tamtam.mooney.domain.entity.CategoryName;
-import tamtam.mooney.domain.entity.MonthlyBudget;
-import tamtam.mooney.domain.entity.UserSchedule;
-import tamtam.mooney.domain.entity.User;
+import tamtam.mooney.domain.entity.*;
 import tamtam.mooney.domain.repository.MonthlyBudgetRepository;
 import tamtam.mooney.domain.repository.UserScheduleRepository;
 import tamtam.mooney.global.exception.CustomException;
@@ -20,12 +18,9 @@ import tamtam.mooney.global.exception.ErrorCode;
 import tamtam.mooney.global.openai.AIPromptService;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,6 +31,7 @@ public class DailyBudgetService {
     private final UserScheduleRepository userScheduleRepository;
     private final MonthlyBudgetRepository monthlyBudgetRepository;
     private final AIPromptService aiPromptService;
+    private final ExpenseService expenseService;
 
     @Transactional(readOnly = true)
     public DailyBudgetResponseDto getTomorrowBudgetAndSchedules(DailyBudgetRequestDto requestDto) {
@@ -46,7 +42,7 @@ public class DailyBudgetService {
         List<UserSchedule> tomorrowSchedules = userScheduleRepository.findAllById(requestDto.scheduleIds());
 
         // 반복 일정 데이터 구성
-        List<Map<String, Object>> recurringExpenses = repeatedSchedules.stream()
+        List<Map<String, Object>> repeatedScheduleMapList = repeatedSchedules.stream()
                 .filter(schedule -> schedule.getPredictedAmount() != null && schedule.getPredictedAmount().compareTo(BigDecimal.ZERO) > 0)
                 .map(schedule -> {
                     Map<String, Object> expense = new HashMap<>();
@@ -59,7 +55,7 @@ public class DailyBudgetService {
                 .toList();
 
         // 내일 일정 데이터 구성
-        List<Map<String, Object>> scheduledExpenses = tomorrowSchedules.stream()
+        List<Map<String, Object>> tomorrowScheduleMapList = tomorrowSchedules.stream()
                 .filter(schedule -> schedule.getPredictedAmount() != null && schedule.getPredictedAmount().compareTo(BigDecimal.ZERO) > 0)
                 .filter(schedule -> repeatedSchedules.stream()
                         .noneMatch(repeatedSchedule -> repeatedSchedule.getScheduleId().equals(schedule.getScheduleId())))
@@ -72,23 +68,31 @@ public class DailyBudgetService {
                     return expense;
                 })
                 .toList();
-
-        String formattedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        MonthlyBudget thisMonthBudget = monthlyBudgetRepository.findByUserAndPeriod(user, formattedDate)
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        String period = tomorrow.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        MonthlyBudget thisMonthBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
                 .orElseThrow(()-> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+
         BigDecimal totalBudget = thisMonthBudget.getFinalAmount();
+        List<Expense> expenses = expenseService.findExpensesForUser(tomorrow.getYear(), tomorrow.getMonthValue(), user);
+        BigDecimal totalExpenseAmount = expenseService.calculateTotalExpenseAmount(expenses);
 
         double weightForCategory = 0.5;
+        if (totalBudget.compareTo(totalExpenseAmount) < 0) {
+            throw new CustomException(ErrorCode.ERROR);
+        }
 
         String aiResponse = aiPromptService.buildDailyBudgetMessage(
-                recurringExpenses,
-                scheduledExpenses,
+                tomorrow,
+                repeatedScheduleMapList,
+                tomorrowScheduleMapList,
                 totalBudget,
                 weightForCategory
         );
         log.info("AI Response:\n" + aiResponse);
 
         try {
+            JSONObject jsonObject = new JSONObject(aiResponse);
             return mergeSchedulesWithJsonData(repeatedSchedules, tomorrowSchedules, aiResponse);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
@@ -103,34 +107,35 @@ public class DailyBudgetService {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(jsonResponse);
 
-        // JSON에서 recurring_expenses와 scheduled_expenses 추출
-        List<Map<String, Object>> recurringExpenseData = objectMapper.convertValue(
-                rootNode.get("recurring_expenses"),
-                new TypeReference<>() {}
-        );
-        List<Map<String, Object>> scheduledExpenseData = objectMapper.convertValue(
-                rootNode.get("scheduled_expenses"),
-                new TypeReference<>() {}
-        );
+        // JSON에서 recurring_expenses 추출
+        List<Map<String, Object>> recurringExpenseData = Optional.ofNullable(rootNode.get("recurring_expenses"))
+                .map(node -> objectMapper.convertValue(node, new TypeReference<List<Map<String, Object>>>() {}))
+                .orElse(Collections.emptyList());
+
+        // JSON에서 scheduled_expenses 추출
+        List<Map<String, Object>> scheduledExpenseData = Optional.ofNullable(rootNode.get("scheduled_expenses"))
+                .map(node -> objectMapper.convertValue(node, new TypeReference<List<Map<String, Object>>>() {}))
+                .orElse(Collections.emptyList());
 
         // 반복 소비 데이터 매핑
         List<DailyBudgetResponseDto.RepeatedScheduleDto> repeatedScheduleDtos = recurringExpenseData.stream()
                 .map(expense -> {
-                    // 카테고리, 하루 예산 금액(예상 금액) 및 기타 필요한 필드 가져오기
                     String category = (String) expense.get("category");
                     BigDecimal perDayAmount = new BigDecimal(String.valueOf(expense.get("per_day_amount")));
 
                     return new DailyBudgetResponseDto.RepeatedScheduleDto(
-                            null,  // scheduleId는 현재 null로 설정
-                            category,  // title은 카테고리 이름으로 설정
-                            category,  // categoryName도 카테고리 이름으로 설정
-                            perDayAmount  // predictedAmount는 하루 예산 금액으로 설정
+                            null,
+                            category,
+                            category,
+                            perDayAmount
                     );
                 })
                 .collect(Collectors.toList());
 
         // 내일 일정 데이터 매핑
-        List<DailyBudgetResponseDto.TomorrowScheduleDto> tomorrowScheduleDtos = tomorrowSchedules.stream()
+        List<DailyBudgetResponseDto.TomorrowScheduleDto> tomorrowScheduleDtos = Optional.ofNullable(tomorrowSchedules)
+                .orElse(Collections.emptyList()) // 내일 일정이 없을 경우 빈 리스트 처리
+                .stream()
                 .filter(schedule -> repeatedSchedules.stream()
                         .noneMatch(repeated -> repeated.getScheduleId().equals(schedule.getScheduleId())))
                 .map(schedule -> {
@@ -140,24 +145,41 @@ public class DailyBudgetService {
                             .findFirst()
                             .orElse(null);
 
-                    // 예산 값을 JSON에서 가져오거나 기존 값을 사용
-                    BigDecimal predictedAmount = (jsonExpense != null && jsonExpense.get("weighted_budget") != null)
-                            ? new BigDecimal(String.valueOf(jsonExpense.get("weighted_budget")))
-                            : schedule.getPredictedAmount();
+                    CategoryName categoryName = Optional.ofNullable(jsonExpense)
+                            .map(expense -> Arrays.stream(CategoryName.values())
+                                    .filter(c -> c.getDescription().equals(expense.get("category")))
+                                    .findFirst()
+                                    .orElse(CategoryName.EXTRA))
+                            .orElse(CategoryName.EXTRA);
+
+                    BigDecimal predictedAmount = Optional.ofNullable(jsonExpense)
+                            .map(expense -> new BigDecimal(String.valueOf(expense.get("weighted_budget"))))
+                            .orElse(schedule.getPredictedAmount());
+
+                    schedule.setCategoryNameAndPredictedAmount(categoryName, predictedAmount);
 
                     return DailyBudgetResponseDto.TomorrowScheduleDto.builder()
                             .scheduleId(schedule.getScheduleId())
                             .title(schedule.getTitle())
-                            .categoryName(schedule.getCategoryName() != null ? schedule.getCategoryName().getDescription() : "기타")
+                            .categoryName(categoryName.getDescription())
                             .predictedAmount(predictedAmount)
                             .build();
                 })
                 .collect(Collectors.toList());
 
-        // 전체 예산 추출
-        BigDecimal budgetAmount = rootNode.has("daily_budget_total")
-                ? new BigDecimal(rootNode.get("daily_budget_total").asText())
-                : BigDecimal.ZERO;
+        log.info("내일 일정 매핑 완료. 총 항목 수: {}", tomorrowScheduleDtos.size());
+
+        // 총 예산 금액 계산
+        BigDecimal totalPredictedAmount = repeatedScheduleDtos.stream()
+                .map(DailyBudgetResponseDto.RepeatedScheduleDto::getPredictedAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        totalPredictedAmount = totalPredictedAmount.add(tomorrowScheduleDtos.stream()
+                .map(DailyBudgetResponseDto.TomorrowScheduleDto::getPredictedAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
+
+        BigDecimal budgetAmount = totalPredictedAmount;
+        log.info("총 예산 금액 계산 완료: {}", budgetAmount);
 
         return DailyBudgetResponseDto.builder()
                 .repeatedSchedules(repeatedScheduleDtos)
@@ -165,5 +187,4 @@ public class DailyBudgetService {
                 .budgetAmount(budgetAmount)
                 .build();
     }
-
 }

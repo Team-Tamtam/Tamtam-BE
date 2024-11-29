@@ -4,8 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tamtam.mooney.domain.dto.MergeSchedulesRequest;
 import tamtam.mooney.domain.dto.request.DailyBudgetRequestDto;
 import tamtam.mooney.domain.dto.response.DailyBudgetResponseDto;
 import tamtam.mooney.domain.dto.request.MonthlyBudgetRequestDto;
@@ -13,6 +15,7 @@ import tamtam.mooney.domain.dto.response.MonthlyBudgetResponseDto;
 import tamtam.mooney.domain.service.DailyBudgetService;
 import tamtam.mooney.domain.service.MonthlyBudgetService;
 
+@Slf4j
 @Tag(name = "Budget")
 @RestController
 @RequiredArgsConstructor
@@ -33,5 +36,25 @@ public class BudgetContoller {
     public ResponseEntity<?> createNextMonthBudget(@RequestBody @Valid MonthlyBudgetRequestDto requestDto) {
         MonthlyBudgetResponseDto responseDto = monthlyBudgetService.createNextMonthBudget(requestDto);
         return ResponseEntity.ok(responseDto);
+    }
+
+    @PostMapping("/merge-schedules")
+    public DailyBudgetResponseDto mergeSchedulesWithJsonData(
+            @RequestBody MergeSchedulesRequest request
+    ) {
+        log.info("Received mergeSchedulesWithJsonData request: {}", request);
+
+        try {
+            DailyBudgetResponseDto response = dailyBudgetService.mergeSchedulesWithJsonData(
+                    request.getRepeatedSchedules(),
+                    request.getTomorrowSchedules(),
+                    request.getJsonResponse()
+            );
+            log.info("Successfully merged schedules. Budget amount: {}", response.getBudgetAmount());
+            return response;
+        } catch (Exception e) {
+            log.error("Error merging schedules with JSON data", e);
+            throw new RuntimeException("Error processing the request", e);
+        }
     }
 }

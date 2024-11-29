@@ -7,6 +7,8 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +20,7 @@ public class AIPromptService {
 
     /**
      * 기능 1 - 이번 달 예산과 소비를 분석하여 일일 예산을 계산하고 결과 메시지를 만듭니다.
+     * @param tomorrowDate 내일 날짜
      * @param recurringExpenses 식비와 같은 반복적인 카테고리 예산 (List 형식)
      * @param scheduledExpenses 특정 일정에 대한 소비 예산 (List 형식)
      * @param totalBudget 전체 예산 (double 형식)
@@ -25,6 +28,7 @@ public class AIPromptService {
      * @return 계산된 일일 예산을 포함한 피드백 메시지 내용이 담긴 String
      */
     public String buildDailyBudgetMessage(
+            LocalDate tomorrowDate,
             List<Map<String, Object>> recurringExpenses,
             List<Map<String, Object>> scheduledExpenses,
             BigDecimal totalBudget,
@@ -44,7 +48,6 @@ public class AIPromptService {
         JSONObject systemMessage = createSystemMessage(GPT_PROMPT);
         messages.put(systemMessage);
 
-
         // User Role 메시지 1
         JSONObject userMessage1 = new JSONObject();
         userMessage1.put("role", "user");
@@ -52,11 +55,46 @@ public class AIPromptService {
         JSONArray userContent1 = new JSONArray();
         JSONObject userContentObject1 = new JSONObject();
         userContentObject1.put("type", "text");
-        userContentObject1.put("text", "I am providing budget data for the assistant to calculate my daily budget for November 11, 2024. My goal is to divide expenses between recurring categories (like meals) and specific scheduled events. Here’s a detailed breakdown: Recurring Expense: 식비 The \"식비\" category has a remaining budget of ₩250,000, and there are 20 days left in the month. Please divide this budget evenly across the remaining days and calculate a per-meal amount, assuming three meals per day. Scheduled Expenses In addition to recurring expenses, there are specific scheduled events for which I need an expense estimate. Here's how to handle these: Event Categorization: Please categorize the event \"졸프 애들이랑 이태원\" appropriately if possible. Otherwise, provide an option for me to choose later. Budget Allocation: Each event should receive a budget by dividing the remaining budget of its category by the number of remaining events in that category. Example: \"교육/학습\" has a remaining budget of ₩10,000, and there is 1 event in this category. \"문화/여가\" has a remaining budget of ₩70,000, and there are 2 events in this category. Price Suggestions: Include external price suggestions (e.g., average costs for similar activities among people in their 20s) if available. Combine the calculated category-based budget with the external price suggestion using the specified weight. The default weight is 0.5 for each unless I specify otherwise.");
 
+        String userPromptTemplate =
+                "I am providing budget data for the assistant to calculate my daily budget for {0}. " +
+                        "My goal is to divide expenses between recurring categories (like meals) and specific scheduled events. " +
+                        "Here’s a detailed breakdown:\n" +
+                        "Recurring Expense: {1}\n" +
+                        "The \"{1}\" category has a remaining budget of ₩{2} and there are {3} days left in the month. " +
+                        "Please divide this budget evenly across the remaining days and calculate a per-meal amount, assuming three meals per day.\n" +
+                        "Scheduled Expenses\n" +
+                        "In addition to recurring expenses, there are specific scheduled events for which I need an expense estimate. " +
+                        "Here's how to handle these:\n" +
+                        "Event Categorization: Please categorize the event \"{4}\" appropriately if possible. " +
+                        "Otherwise, provide an option for me to choose later.\n" +
+                        "Budget Allocation: Each event should receive a budget by dividing the remaining budget of its category by the number of remaining events in that category. " +
+                        "Example: \"{5}\" has a remaining budget of ₩{6} and there are {7} events in this category. " +
+                        "\"{8}\" has a remaining budget of ₩{9} and there are {10} events in this category.\n" +
+                        "Price Suggestions: Include external price suggestions (e.g., average costs for similar activities among people in their 20s) if available. " +
+                        "Combine the calculated category-based budget with the external price suggestion using the specified weight. The default weight is 0.5 for each unless I specify otherwise.";
+
+        LocalDate lastDayOfMonth = tomorrowDate.with(TemporalAdjusters.lastDayOfMonth());  // Last day of the current month
+        long remainingDays = tomorrowDate.until(lastDayOfMonth).getDays() + 1;  // Include today in the remaining days
+
+        String formattedString = String.format(
+                userPromptTemplate,
+                tomorrowDate,    // {0} 내일 날짜
+                "식비",                  // {1} Category (Recurring)
+                250000,                  // {2} Remaining Budget for 식비
+                remainingDays,                      // {3} Remaining Days in the month
+                "졸프 애들이랑 이태원",      // {4} Event description
+                "교육/학습",              // {5} Category for example
+                10000,                   // {6} Remaining Budget for 교육/학습
+                1,                       // {7} Remaining Events in 교육/학습
+                "문화/여가",              // {8} Category for example
+                70000,                   // {9} Remaining Budget for 문화/여가
+                2                        // {10} Remaining Events in 문화/여가
+        );
+
+        userContentObject1.put("text", formattedString);
         userContent1.put(userContentObject1);
         userMessage1.put("content", userContent1);
-
 
         // User Role 메시지 2 (Budget Data)
         JSONObject userMessage2 = new JSONObject();
@@ -64,14 +102,70 @@ public class AIPromptService {
 
         JSONArray userContent2 = new JSONArray();
         JSONObject userContentObject2 = new JSONObject();
-        // 사용자의 예산 데이터를 JSON으로 구성
-        JSONObject budgetData = new JSONObject()
+        // 사용자의 데이터를 JSON으로 구성
+        /*JSONObject budgetData = new JSONObject()
                 .put("weight_for_category", weightForCategory)
                 .put("total_remaining_budget", totalBudget)
                 .put("recurring_expenses", new JSONArray(recurringExpenses))
-                .put("scheduled_expenses", new JSONArray(scheduledExpenses));
+                .put("scheduled_expenses", new JSONArray(scheduledExpenses));*/
+
+        // TODO: 12월에 날짜 바꾸기
+        String jsonString = "{\n" +
+                "  \"weight_for_category\": %.1f\n" +
+                "  \"tomorrow_date\": \"%s\",\n" +  // 내일 날짜
+                "  \"scheduled_expenses\": %s,\n" +  // 내일의 소비일정
+                "  \"total_budget_amount\": %s,\n" +
+                "  \"category_budgets\": {\n" +
+                "    \"교육/학습\": \"10,000원\",\n" +
+                "    \"교통\": \"20,000원\",\n" +
+                "    \"금융\": \"5,000원\",\n" +
+                "    \"문화/여가\": \"70,000원\",\n" +
+                "    \"뷰티/미용\": \"10,000원\",\n" +
+                "    \"생활\": \"15,000원\",\n" +
+                "    \"식비\": \"25,000원\",\n" +
+                "    \"의료/건강\": \"20,000원\",\n" +
+                "    \"카페/간식\": \"15,000원\",\n" +
+                "    \"패션/쇼핑\": \"5,000원\"\n" +
+                "  },\n" +
+                "  \"사용자의 해당 달 남은 일정 카테고리 분류 및 일정 목록\": {\n" +
+                "    \"문화/여가\": {\n" +
+                "      \"남은 일정 개수\": 2,\n" +
+                "      \"일정 목록\": [\n" +
+                "        {\n" +
+                "          \"description\": \"동아리 전시회\",\n" +
+                "          \"time\": \"2024-11-30 20:00:00\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"description\": \"주말에 뮤지컬 관람\",\n" +
+                "          \"time\": \"2024-11-30 11:16:02\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    \"교육/학습\": {\n" +
+                "      \"남은 일정 개수\": 1,\n" +
+                "      \"일정 목록\": [\n" +
+                "        {\n" +
+                "          \"description\": \"해커스 토플 인강 결제하기!\",\n" +
+                "          \"time\": \"2024-11-30 10:00:00\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    \"카페/간식\": {\n" +
+                "      \"남은 일정 개수\": 1,\n" +
+                "      \"일정 목록\": [\n" +
+                "        {\n" +
+                "          \"description\": \"지민재현이랑 익선동 카페\",\n" +
+                "          \"time\": \"2024-11-30 20:00:00\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        String dataString = String.format(jsonString, weightForCategory, tomorrowDate, totalBudget, new JSONObject(scheduledExpenses));
+
         userContentObject2.put("type", "text");
-        userContentObject2.put("text", "Provided Data: \n" + budgetData);
+        userContentObject2.put("text", "Provided Data: \n" + dataString);
 
         userContent2.put(userContentObject2);
         userMessage2.put("content", userContent2);
@@ -149,11 +243,15 @@ public class AIPromptService {
         messages.put(new JSONObject().put("tools", tools));
 
         // OpenAI 서비스 호출 및 결과 반환
-        String result = openAIService.generateGPTResponse(messages, 0.7, 2048, 1, 0, 0)
-                .replaceAll("```json[\\s\\S]*?```", "")  // Match any content inside ```json...```
-                .trim();
-        log.info(result);
-        return result;
+        String result = openAIService.generateGPTResponse(messages, 0.7, 2048, 1, 0, 0);
+
+        // 정규식으로 백틱 안의 JSON만 추출
+        String jsonContent = result.replaceAll("(?s).*```json(.*?)```.*", "$1").trim();
+        // 백틱이 없을 경우에는 원본 결과 그대로 사용
+        if (jsonContent.isEmpty()) {
+            jsonContent = result.trim();
+        }
+        return jsonContent;
     }
 
     /**
@@ -289,11 +387,15 @@ public class AIPromptService {
         messages.put(userMessage);
 
         // OpenAI 서비스 호출 및 결과 반환
-        String result = openAIService.generateGPTResponse(messages, 1.0, 2048, 1, 0, 0)
-                .replaceAll("```json[\\s\\S]*?```", "")  // Match any content inside ```json...```
-                .trim();
-        log.info(result);
-        return result;
+        String result = openAIService.generateGPTResponse(messages, 1.0, 2048, 1, 0, 0);
+
+        // 정규식으로 백틱 안의 JSON만 추출
+        String jsonContent = result.replaceAll("(?s).*```json(.*?)```.*", "$1").trim();
+        // 백틱이 없을 경우에는 원본 결과 그대로 사용
+        if (jsonContent.isEmpty()) {
+            jsonContent = result.trim();
+        }
+        return jsonContent;
     }
 
     /**

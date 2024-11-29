@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import tamtam.mooney.global.openai.dto.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +22,7 @@ public class AiTestInputService {
     public String buildDailyBudgetWithRequestBody(DailyBudgetInputRequestDto requestDto) {
         // 1. 반복 일정
         List<RecurringExpenseInputDto> recurringExpense = requestDto.recurringExpenses();
-        List<Map<String, Object>> recurringExpenseMap = recurringExpense.stream()
+        List<Map<String, Object>> recurringExpenseMapList = recurringExpense.stream()
                 .map(expense -> {
                     Map<String, Object> expenseMap = new HashMap<>();
                     expenseMap.put("category", expense.category());
@@ -56,7 +58,8 @@ public class AiTestInputService {
         double weightForCategory = requestDto.weightForCategory();
 
         // 5. buildDailyBudgetMessage 호출
-        String message = aiPromptService.buildDailyBudgetMessage(recurringExpenseMap, scheduledExpensesMapList, totalBudget, weightForCategory);
+        String message = aiPromptService.buildDailyBudgetMessage(
+                LocalDate.now().plusDays(1), recurringExpenseMapList, scheduledExpensesMapList, totalBudget, weightForCategory);
         log.info("message: ");
 
         return message;
