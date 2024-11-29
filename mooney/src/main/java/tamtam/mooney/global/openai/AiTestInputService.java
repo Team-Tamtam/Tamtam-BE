@@ -104,7 +104,7 @@ public class AiTestInputService {
                 })
                 .collect(Collectors.toList());
 
-        double totalBudget = requestDto.totalBudget();
+        BigDecimal totalBudget = requestDto.totalBudget();
 
         // 기존 메서드 호출
         return aiPromptService.buildMonthlyBudgetMessage(
