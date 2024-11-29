@@ -166,8 +166,6 @@ public class AIPromptService {
         JSONObject systemMessage = createSystemMessage(GPT_PROMPT);
         messages.put(systemMessage);
 
-
-
         // 사용자 메시지: 월별 예산 및 지출 데이터 입력
         JSONObject userMessage = new JSONObject();
         userMessage.put("role", "user");
@@ -199,9 +197,14 @@ public class AIPromptService {
         // 메시지 배열에 사용자 메시지 추가
         messages.put(userMessage);
 
+        // OpenAI 서비스 호출 및 응답 parsing
+        String result = openAIService.generateGPTResponse(messages, 1.1, 200, 1, 0, 0);
+        JSONObject jsonResponse = new JSONObject(result);
+        String feedbackMessage = jsonResponse.getString("response");
 
-        // OpenAI 서비스 호출 및 결과 반환
-        return openAIService.generateGPTResponse(messages, 1.1, 200, 1, 0, 0);
+        // 이스케이프 처리
+        feedbackMessage = feedbackMessage.replace("\\n", "\n").replace("\\", "");
+        return feedbackMessage;
     }
 
 
