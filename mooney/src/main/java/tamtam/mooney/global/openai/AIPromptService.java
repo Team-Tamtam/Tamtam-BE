@@ -21,7 +21,6 @@ public class AIPromptService {
     /**
      * 기능 1 - 이번 달 예산과 소비를 분석하여 일일 예산을 계산하고 결과 메시지를 만듭니다.
      * @param tomorrowDate 내일 날짜
-     * @param recurringExpenses 식비와 같은 반복적인 카테고리 예산 (List 형식)
      * @param scheduledExpenses 특정 일정에 대한 소비 예산 (List 형식)
      * @param totalBudget 전체 예산 (double 형식)
      * @param weightForCategory 카테고리별 예산 계산에 사용할 가중치 (double 형식)
@@ -29,7 +28,6 @@ public class AIPromptService {
      */
     public String buildDailyBudgetMessage(
             LocalDate tomorrowDate,
-            List<Map<String, Object>> recurringExpenses,
             List<Map<String, Object>> scheduledExpenses,
             BigDecimal totalBudget,
             double weightForCategory
