@@ -17,6 +17,6 @@ public class UserController {
     @Operation(summary = "유저 닉네임 조회")
     @GetMapping("/nickname")
     public ResponseEntity<?> getUserInfo() {
-        return ResponseEntity.ok().body(userService.getUserNickname());
+        return ResponseEntity.ok().body(userService.getCurrentUserNickname());
     }
 }

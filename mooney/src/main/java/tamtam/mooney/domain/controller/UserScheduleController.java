@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tamtam.mooney.domain.dto.UserScheduleDto;
+import tamtam.mooney.domain.dto.common.UserScheduleDto;
 import tamtam.mooney.domain.service.UserScheduleService;
 
 import java.util.List;

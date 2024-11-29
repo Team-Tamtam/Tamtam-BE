@@ -5,6 +5,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +48,7 @@ public class AIPromptService {
         JSONArray userContent1 = new JSONArray();
         JSONObject userContentObject1 = new JSONObject();
         userContentObject1.put("type", "text");
-        userContentObject1.put("text", "I am providing budget data/..");
+        userContentObject1.put("text", "I am providing budget data for the assistant to calculate my daily budget for November 11, 2024. My goal is to divide expenses between recurring categories (like meals) and specific scheduled events. Here’s a detailed breakdown: Recurring Expense: 식비 The \"식비\" category has a remaining budget of ₩250,000, and there are 20 days left in the month. Please divide this budget evenly across the remaining days and calculate a per-meal amount, assuming three meals per day. Scheduled Expenses In addition to recurring expenses, there are specific scheduled events for which I need an expense estimate. Here's how to handle these: Event Categorization: Please categorize the event \"졸프 애들이랑 이태원\" appropriately if possible. Otherwise, provide an option for me to choose later. Budget Allocation: Each event should receive a budget by dividing the remaining budget of its category by the number of remaining events in that category. Example: \"교육/학습\" has a remaining budget of ₩10,000, and there is 1 event in this category. \"문화/여가\" has a remaining budget of ₩70,000, and there are 2 events in this category. Price Suggestions: Include external price suggestions (e.g., average costs for similar activities among people in their 20s) if available. Combine the calculated category-based budget with the external price suggestion using the specified weight. The default weight is 0.5 for each unless I specify otherwise.");
         userContent1.put(userContentObject1);
         userMessage1.put("content", userContent1);
 
@@ -66,7 +67,7 @@ public class AIPromptService {
                 .put("scheduled_expenses", new JSONArray(scheduledExpenses));
 
         userContentObject2.put("type", "text");
-        userContentObject2.put("text", budgetData);
+        userContentObject2.put("text", "Provided Data: \n" + budgetData);
 
         userContent2.put(userContentObject2);
         userMessage2.put("content", userContent2);
@@ -143,15 +144,17 @@ public class AIPromptService {
 
     /**
      * 기능 2 - 월별 리포트에서 피드백 메시지를 생성하기 위한 메시지를 만듭니다.
-     * @param totalBudget 전체 예산 (double 형식)
+     * @param totalBudgetAmount 전체 예산
      * @param categoryBudgets 카테고리별 예산 (Map 형식)
-     * @param monthlyExpenses 월간 지출 데이터 (List<Map<String, Object>> 형식)
+     * @param totalExpenseAmount 전체 지출
+     * @param categoryExpenses 카테고리별 예산 (Map 형식)
      * @return 생성된 피드백 메시지 내용이 담긴 String
      */
     public String buildMonthlyReportMessage(
-            double totalBudget,
-            Map<String, Integer> categoryBudgets,
-            List<Map<String, Object>> monthlyExpenses
+            BigDecimal totalBudgetAmount,
+            Map<String, BigDecimal> categoryBudgets,
+            BigDecimal totalExpenseAmount,
+            Map<String, BigDecimal> categoryExpenses
     ) {
         // GPT 모델이 분석할 프롬프트 정의
         final String GPT_PROMPT = "You are a financial assistant designed to analyze a user's monthly budget and expenses. Your task is to compare their planned budget with actual expenses, identify areas of success and improvement, and provide actionable, motivational feedback for the next month. Follow these rules:\\n\\n1) Start with positive feedback on total and move in to each categories where the user stayed within or under budget.\\n 2) Identify categories where the user exceeded their budget, explaining why it might have happened.\\n   - Example: \\\"Transportation costs were higher than planned, likely due to unexpected trips.\\\"\\n\\n3) Provide actionable suggestions to improve spending habits next month.\\n   - Example: \\\"Consider reducing dining out and reallocating the savings to other categories.\\\"\\n\\n4) Use friendly and motivational language to encourage the user.\\n\\n5) Output the response as a single JSON object under the key \\\"response\\\".6) You should only have to give feedback in Korean, not English. 7) You will end up giving one paragaph(3~4 sentences in Korean) of feedback which should include everything, not separtely. That's the only thing you should give it. TOTAL SUMMARY OF FEEDBACK OF THIS MONTH. 8) put 2 emojis in the middle of sentence and say in friendly tone. You should focus on more positive things and emphasis more that negative things. The example of expected response is like '이번 달 총 예산을 90% 사용하시면서 예산 내에 소비를 성공하셨네요!! 특히 식비를 정말 잘 절약하셨어요! \uD83C\uDF89 하지만 외식비가 예산을 살짝 초과한 점이 아쉬워요. 다음 달에는 외식 횟수를 조금 줄이고 대신 식비 예산을 살짝 늘려서 균형을 맞춰보는 건 어떨까요? 이렇게 하면 더 많은 저축도 가능할 거예요! \uD83D\uDE0A'";
@@ -166,21 +169,42 @@ public class AIPromptService {
         // 사용자 메시지: 월별 예산 및 지출 데이터 입력
         JSONObject userMessage = new JSONObject();
         userMessage.put("role", "user");
-        JSONArray userContent = new JSONArray();
-        JSONObject userContentObject = new JSONObject();
-        userContentObject.put("type", "text");
-        userContentObject.put("text", new JSONObject()
-                .put("monthly_expenses", new JSONArray(monthlyExpenses))
-                .put("total_budget", totalBudget)
-                .put("category_budgets", categoryBudgets).toString());
-        userContent.put(userContentObject);
+        JSONObject userContent = new JSONObject();
+
+        // 월별 지출 및 예산 데이터를 새 형식에 맞게 업데이트
+        JSONObject monthlyData = new JSONObject();
+
+        // 월별 지출 데이터 추가
+        JSONObject expenseData = new JSONObject();
+        expenseData.put("total_expense_amount", totalExpenseAmount);
+        expenseData.put("category_expenses", new JSONObject(categoryExpenses));
+
+        // 월별 예산 데이터 추가
+        JSONObject budgetData = new JSONObject();
+        budgetData.put("total_budget_amount", totalBudgetAmount);
+        budgetData.put("category_budgets", new JSONObject(categoryBudgets));
+
+        monthlyData.put("monthly_expenses", expenseData);
+        monthlyData.put("monthly_budget", budgetData);
+
+        // 사용자 메시지에 월별 데이터를 "text"로 추가
+        userContent.put("type", "text");
+        userContent.put("text", "Here is my monthly data: \n" + monthlyData);
+
+        // 사용자 메시지에 content 추가
         userMessage.put("content", userContent);
 
         // 메시지 배열에 사용자 메시지 추가
         messages.put(userMessage);
 
-        // OpenAI 서비스 호출 및 결과 반환
-        return openAIService.generateGPTResponse(messages, 1.1, 200, 1, 0, 0);
+        // OpenAI 서비스 호출 및 응답 parsing
+        String result = openAIService.generateGPTResponse(messages, 1.1, 200, 1, 0, 0);
+        JSONObject jsonResponse = new JSONObject(result);
+        String feedbackMessage = jsonResponse.getString("response");
+
+        // 이스케이프 처리
+        feedbackMessage = feedbackMessage.replace("\\n", "\n").replace("\\", "");
+        return feedbackMessage;
     }
 
 
