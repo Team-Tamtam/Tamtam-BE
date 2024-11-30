@@ -211,7 +211,7 @@ public class InitDB {
         List<UserSchedule> defaultSchedules = new ArrayList<>();
 
         UserSchedule schedule1 = UserSchedule.builder()
-                .title("카공")
+                .title("카페에서 시험공부")
                 .startDateTime(startOfTomorrow.plusHours(10))
                 .endDateTime(startOfTomorrow.plusHours(11))
                 .location("투썸플레이스")
