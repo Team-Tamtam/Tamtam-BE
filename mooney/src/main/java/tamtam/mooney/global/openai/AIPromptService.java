@@ -80,11 +80,11 @@ public class AIPromptService {
                         "The \"{recurringCategory}\" category has a remaining budget of {remainingBudget} and there are {remainingDays} days left in the month. " +
                         "Please divide this budget evenly across the remaining days and calculate a per-meal amount, assuming three meals per day.\n" +
                         "Scheduled Expenses\n" +
-                        "In addition to recurring expenses, there are specific tomorrow_expenses for which I need an expense estimate. " +
+                        "In addition to recurring expenses, there are specific scheduled_expenses for which I need an expense estimate. " +
                         "Here's how to handle these:\n" +
                         "Event Categorization: Please categorize the event \"{eventDescription}\" appropriately if possible. " +
                         "Otherwise, provide an option for me to choose later.\n" +
-                        "Budget Allocation: The budget amount for tomorrow_expenses is especially important. Each event should receive a budget by dividing the remaining budget of its category by the number of remaining events in that category. " +
+                        "Budget Allocation: The budget amount for scheduled_expenses is especially important. Each event should receive a budget by dividing the remaining budget of its category by the number of remaining events in that category. " +
                         "Example: \"{eventCategory1}\" has a remaining budget of {remainingBudget1} and there are {remainingEvents1} events in this category. " +
                         "\"{eventCategory2}\" has a remaining budget of {remainingBudget2} and there are {remainingEvents2} events in this category.\n" +
                         "Price Suggestions: Include external price suggestions (e.g., average costs for similar activities among people in their 20s) if available. " +
@@ -110,7 +110,7 @@ public class AIPromptService {
                 "  \"weight_for_category\": %.1f\n" +
                 "  \"tomorrow_date\": \"%s\",\n" +  // 내일 날짜
                 "  \"total_budget_amount\": %s,\n" +
-                "  \"tomorrow_expenses\": %s,\n" +  // 내일의 소비일정
+                "  \"scheduled_expenses\": %s,\n" +  // 내일의 소비일정
                 "  \"category_budgets\": {\n" +
                 "    \"교육/학습\": \"50000\",\n" +
                 "    \"교통\": \"70000\",\n" +
