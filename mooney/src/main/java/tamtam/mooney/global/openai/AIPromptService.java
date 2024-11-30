@@ -22,7 +22,7 @@ public class AIPromptService {
      * 기능 1 - 이번 달 예산과 소비를 분석하여 일일 예산을 계산하고 결과 메시지를 만듭니다.
      * @param tomorrowDate 내일 날짜
      * @param scheduledExpenses 특정 일정에 대한 소비 예산 (List 형식)
-     * @param totalBudget 전체 예산 (double 형식)
+     * @param totalBudget 전체 예산
      * @param weightForCategory 카테고리별 예산 계산에 사용할 가중치 (double 형식)
      * @return 계산된 일일 예산을 포함한 피드백 메시지 내용이 담긴 String
      */
@@ -73,16 +73,16 @@ public class AIPromptService {
         userContentObject1.put("type", "text");
 
         String userPromptTemplate =
-                "I am providing budget data for the assistant to calculate my daily budget for {0}. " +
+                "I am providing budget data for the assistant to calculate my daily budget for the remaining days of this month. " +
                         "My goal is to divide expenses between recurring categories (like meals) and specific scheduled events. " +
                         "Here’s a detailed breakdown:\n" +
-                        "Recurring Expense: {1}\n" +
-                        "The \"{1}\" category has a remaining budget of ₩{2} and there are {3} days left in the month. " +
+                        "Recurring Expense: {recurringCategory}\n" +
+                        "The \"{recurringCategory}\" category has a remaining budget of {remainingBudget} and there are {remainingDays} days left in the month. " +
                         "Please divide this budget evenly across the remaining days and calculate a per-meal amount, assuming three meals per day.\n" +
                         "Scheduled Expenses\n" +
                         "In addition to recurring expenses, there are specific tomorrow_expenses for which I need an expense estimate. " +
                         "Here's how to handle these:\n" +
-                        "Event Categorization: Please categorize the event \"{4}\" appropriately if possible. " +
+                        "Event Categorization: Please categorize the event \"{eventDescription}\" appropriately if possible. " +
                         "Otherwise, provide an option for me to choose later.\n" +
                         "Budget Allocation: The budget amount for tomorrow_expenses is especially important. Each event should receive a budget by dividing the remaining budget of its category by the number of remaining events in that category. " +
                         "Example: \"{eventCategory1}\" has a remaining budget of {remainingBudget1} and there are {remainingEvents1} events in this category. " +
@@ -93,22 +93,8 @@ public class AIPromptService {
         LocalDate lastDayOfMonth = tomorrowDate.with(TemporalAdjusters.lastDayOfMonth());  // Last day of the current month
         long remainingDays = tomorrowDate.until(lastDayOfMonth).getDays() + 1;  // Include today in the remaining days
 
-        String formattedString = String.format(
-                userPromptTemplate,
-                tomorrowDate,    // {0} 내일 날짜
-                "식비",                  // {1} Category (Recurring)
-                250000,                  // {2} Remaining Budget for 식비
-                remainingDays,                      // {3} Remaining Days in the month
-                "졸프 애들이랑 이태원",      // {4} Event description
-                "교육/학습",              // {5} Category for example
-                10000,                   // {6} Remaining Budget for 교육/학습
-                1,                       // {7} Remaining Events in 교육/학습
-                "문화/여가",              // {8} Category for example
-                70000,                   // {9} Remaining Budget for 문화/여가
-                2                        // {10} Remaining Events in 문화/여가
-        );
 
-        userContentObject1.put("text", formattedString);
+        userContentObject1.put("text", userPromptTemplate);
         userContent1.put(userContentObject1);
         userMessage1.put("content", userContent1);
 
@@ -268,7 +254,7 @@ public class AIPromptService {
      * @param totalBudgetAmount 전체 예산
      * @param categoryBudgets 카테고리별 예산 (Map 형식)
      * @param totalExpenseAmount 전체 지출
-     * @param categoryExpenses 카테고리별 예산 (Map 형식)
+     * @param categoryExpenses 카테고리별 지출 (Map 형식)
      * @return 생성된 피드백 메시지 내용이 담긴 String
      */
     public String buildMonthlyReportMessage(
@@ -278,8 +264,8 @@ public class AIPromptService {
             Map<String, BigDecimal> categoryExpenses
     ) {
         // GPT 모델이 분석할 프롬프트 정의
-        final String GPT_PROMPT = "You are a financial assistant designed to analyze a user's monthly budget and expenses. Your task is to compare their planned budget with actual expenses, identify areas of success and improvement, and provide actionable, motivational feedback for the next month. Follow these rules:\\n\\n1) Start with positive feedback on total and move in to each categories where the user stayed within or under budget.\\n 2) Identify categories where the user exceeded their budget, explaining why it might have happened.\\n   - Example: \\\"Transportation costs were higher than planned, likely due to unexpected trips.\\\"\\n\\n3) Provide actionable suggestions to improve spending habits next month.\\n   - Example: \\\"Consider reducing dining out and reallocating the savings to other categories.\\\"\\n\\n4) Use friendly and motivational language to encourage the user.\\n\\n5) Output the response as a single JSON object under the key \\\"response\\\".6) You should only have to give feedback in Korean, not English. 7) You will end up giving one paragaph(3~4 sentences in Korean) of feedback which should include everything, not separtely. That's the only thing you should give it. TOTAL SUMMARY OF FEEDBACK OF THIS MONTH. 8) put 2 emojis in the middle of sentence and say in friendly tone. You should focus on more positive things and emphasis more that negative things. The example of expected response is like '이번 달 총 예산을 90% 사용하시면서 예산 내에 소비를 성공하셨네요!! 특히 식비를 정말 잘 절약하셨어요! \uD83C\uDF89 하지만 외식비가 예산을 살짝 초과한 점이 아쉬워요. 다음 달에는 외식 횟수를 조금 줄이고 대신 식비 예산을 살짝 늘려서 균형을 맞춰보는 건 어떨까요? 이렇게 하면 더 많은 저축도 가능할 거예요! \uD83D\uDE0A'";
-
+        final String GPT_PROMPT =  "You are a financial assistant designed to analyze a user's monthly budget and expenses. Your task is to compare their planned budget with actual expenses, identify areas of success and improvement, and provide actionable, motivational feedback for the next month. Follow these rules:\\n\\n1) Start with positive feedback on total and move in to each categories where the user stayed within or under budget.\\n 2) Identify categories where the user exceeded their budget, explaining why it might have happened.\\n   - Example: \\\"Transportation costs were higher than planned, likely due to unexpected trips.\\\"\\n\\n3) Provide actionable suggestions to improve spending habits next month.\\n   - Example: \\\"Consider reducing dining out and reallocating the savings to other categories.\\\"\\n\\n4) Use friendly and motivational language to encourage the user.\\n\\n5) Output the response as a single JSON object under the key \\\"response\\\".6) You should only have to give feedback in Korean, not English. 7) You will end up giving one paragaph(3~4 sentences in Korean) of feedback which should include everything, not separtely. That's the only thing you should give it. TOTAL SUMMARY OF FEEDBACK OF THIS MONTH. 8) put 2 emojis in the middle of sentence and say in friendly tone. You should focus on more positive things and emphasis more that negative things. The example of expected response is like '이번 달 총 예산을 90% 사용하시면서 예산 내에 소비를 성공하셨네요!! 특히 식비를 정말 잘 절약하셨어요! \uD83C\uDF89 하지만 외식비가 예산을 살짝 초과한 점이 아쉬워요. 다음 달에는 외식 횟수를 조금 줄이고 대신 식비 예산을 살짝 늘려서 균형을 맞춰보는 건 어떨까요? 이렇게 하면 더 많은 저축도 가능할 거예요! \uD83D\uDE0A'";
+        
         // 메시지를 저장할 JSON 배열 생성
         JSONArray messages = new JSONArray();
 
@@ -339,7 +325,7 @@ public class AIPromptService {
      * @param fixedExpenses    고정 지출 리스트 (항목명, 금액, 빈도, 유형, 설명 포함)
      * @param userOpinions     사용자의 의견 및 다음 달 계획
      * @param nextMonthSchedules 다음 달 일정 리스트 (일정 이름, 기간, 카테고리 포함)
-     * @param totalBudget      다음 달 전체 예산 (총 금액)
+     * @param userRequestedBudget      다음 달 전체 예산 (총 금액)
      * @return OpenAI GPT 모델에 전달할 JSON 메시지
      */
     public String buildMonthlyBudgetMessage(
@@ -348,16 +334,68 @@ public class AIPromptService {
             List<Map<String, Object>> fixedExpenses,
             String userOpinions,
             List<Map<String, Object>> nextMonthSchedules,
-            double totalBudget
+            BigDecimal userRequestedBudget
     ) {
         // GPT 모델이 분석할 프롬프트 정의
-        final String GPT_PROMPT = "You are a financial assistant AI responsible for creating a personalized monthly budget. Your task is to analyze the provided data and generate a budget plan for the next month in JSON format. Ensure the budget is tailored for 30 days (one month). Assign categories reasonably, especially for essential costs like food and living expenses. Explain the reasoning behind your allocations in detail in Korean in the `reason` field. YOU SHOULD ASSING REASONABLE BUDGET FOR SCHEDULE AND EACH CATEGORIES. \n\n### Inputs:\n1. **This Month's Budget**: The budget allocated to each category this month. \n2. **This Month's Spending Feedback**: Feedback on whether the user overspent or underspent in various categories this month.\n3. **Fixed Expenses**: Non-negotiable expenses such as rent, utilities, or loan repayments that must be covered.\n4. **User's Preferences**: Specific preferences or priorities for the next month. \n   - If the user's preferences cannot be fully accommodated without exceeding the total budget or making other categories severely underfunded, partially adjust the allocations and explain the reasons clearly in the `reason` field. If you cannot make it, YOU SHOULD EXPLAIN IN THE RESON THO.\n5. **Next Month's Plans**: Include additional expenses for special events, holidays, or other significant activities. You should assign reasonable amount of cost. Especially if it's travel to somewhere, you should calculate all the flight and accomodations, and food, etc. \n6. **Total Budget**: The maximum budget available for allocation next month (e.g., 800,000 KRW).\n\n### Output Requirements:\nGenerate the budget in the following JSON format:\n```json\n{\n  \"monthly_budget\": {\n    \"total_budget\": 800000,\n    \"category_budgets\": {\n      \"경조/선물\": 0,\n      \"교육/학습\": 0,\n      \"교통\": 0,\n      \"금융\": 0,\n      \"문화/여가\": 0,\n      \"반려동물\": 0,\n      \"뷰티/미용\": 0,\n      \"생활\": 0,\n      \"술/유흥\": 0,\n      \"식비\": 0,\n      \"여행/숙박\": 0,\n      \"온라인 쇼핑\": 0,\n      \"의료/건강\": 0,\n      \"자녀/육아\": 0,\n      \"자동차\": 0,\n      \"주거/통신\": 0,\n      \"카페/간식\": 0,\n      \"패션/쇼핑\": 0\n    }\n  },\n  \"reason\": \"Explain the reasoning behind the budget allocations in Korean. Example of response is like the following, 이번 달 예산은 사용자님의 생활 패턴과 피드백을 꼼꼼히 반영해서 짜 보았어요. 먼저, 필수적으로 지출해야 하는 고정비(주거/통신 150,000원, 교통 70,000원)는 꼭 필요한 만큼 먼저 배정했어요. 다음달에는 지민님이 다음 달에는 기타 학원 등록을 원하셨기 때문에 교육/학습 항목에 300,000원을 충분히 배정했어요. 지난달 식비가 조금 초과되었다고 하셔서, 충분히 여유롭게 드실 수 있도록 260,000원으로 살짝 늘렸어요. 카페/간식은 딱 적당히 사용하신 것 같아 이번에도 그대로 유지했어요. 문화/여가 쪽은 사용이 적어서 30,000원을 줄이고, 그 금액은 다른 꼭 필요한 항목에 넣었답니다. 또한, 다음 달 주말 여행을 계획하셨다고 하셔서, 여행/숙박 항목에 150,000원을 새로 배정했어요. 요청하신 다른 항목들 중에서 예산에 부담이 되는 부분은 조금 줄였지만, 최대한 반영하려 노력했답니다. 술/유흥은 특별히 많이 필요하지 않으실 것 같아 조금 줄였고, 생활비는 꼭 필요한 만큼 그대로 유지했어요. 의료/건강 항목은 정기 검진 등 필요한 비용을 고려해서 10,000원을 추가했어요. 지난 달 피드백에 따라 쇼핑에서 지출을 줄여서 다음 달 주요 일정이 여행을 위한 돈을 모아보는 건 어떻까요? 전체 예산이 800,000원을 넘지 않도록 하나하나 신경 써서 조정했으니, 다음 달도 편안하게 보내실 수 있기를 바라요. 😊\" \n}\n";
+        String GPT_PROMPT =
+                "You are a financial assistant AI responsible for creating a personalized monthly budget. Analyze the provided data and generate a budget plan for the next month in JSON format. Ensure the budget is tailored for 30 days and within the fixed total budget. Assign reasonable amounts to categories, focusing on essential costs like food and living expenses. Explain the reasoning behind your allocations in the reason field in Korean.\n" +
+                        "\n" +
+                        "Inputs:\n" +
+                        "\n" +
+                        "Previous month's budget and spending feedback\n" +
+                        "Fixed expenses (non-negotiable)\n" +
+                        "User’s preferences and next month's plans (e.g., special events, travel)\n" +
+                        "Total budget for next month (fixed total budget)\n" +
+                        "### Key Constraints:\n" +
+                        "- After distributing the `total_budget` across categories, ensure that the sum of category budgets matches the `total_budget` exactly. If necessary, adjust the allocations proportionally.\n" +
+                        "- In the explanation (`reason` field), integrate the actual category names from the user's data into the narrative where appropriate. Avoid mentioning the exact total budget in the explanation. Focus on explaining adjustments and rationale for each category based on user feedback and past spending patterns.\n" +
+                        "### Output Requirements:\nGenerate the budget in the following JSON format:\n" +
+                        "{\n  \"monthly_budget\": {\n    \"total_budget\": {0},\n    \"category_budgets\": {\n      \"경조/선물\": 0,\n      \"교육/학습\": 0,\n      \"교통\": 0,\n      \"금융\": 0,\n      \"문화/여가\": 0,\n      \"반려동물\": 0,\n      \"뷰티/미용\": 0,\n      \"생활\": 0,\n      \"술/유흥\": 0,\n      \"식비\": 0,\n      \"여행/숙박\": 0,\n      \"온라인 쇼핑\": 0,\n      \"의료/건강\": 0,\n      \"자녀/육아\": 0,\n      \"자동차\": 0,\n      \"주거/통신\": 0,\n      \"카페/간식\": 0,\n      \"패션/쇼핑\": 0\n    }\n  },\n  " +
+                        "  \"reason\": \"...\"}\n" +
+                        "Guide for reason:\n" +
+                        "You are a friendly financial assistant helping analyze a user's monthly budget and spending. Your goal is to provide a thoughtful, motivating explanation in Korean for budget adjustments based on user feedback and spending habits. Focus on positive aspects and gently suggest improvements where needed.\n" +
+                        "\n" +
+                        "For overspending categories, explain why it happened and suggest increasing the budget for the next month.\n" +
+                        "For categories with underspending, recommend reducing the budget slightly.\n" +
+                        "Offer actionable suggestions for balance and sustainability, keeping the response 8-12 sentences long.\n" +
+                        "Avoid specific numerical values; focus on explaining category changes and the reasoning behind them.\n" +
+                        "Keep the tone warm and encouraging while adapting your response to fit the user's situation.";
+
+//                "You are a financial assistant AI responsible for creating a personalized monthly budget. Your task is to analyze the provided data and generate a budget plan for the next month in JSON format. Ensure the budget is tailored for 30 days (one month). Assign categories reasonably, especially for essential costs like food and living expenses, but within the fixed total budget. Explain the reasoning behind your allocations in detail in Korean in the `reason` field. You should assign a REASONABLE budget for 'Next Month's Plans' and each category. Your thinking process for planning next month budget should be like this. Consider Total budget and fixed expense for first(both are non-negotiable), and then get this month's budget and spending feedback for getting blue-map for the categories proportion, and then get User's preference and next month's plan to make the budget you gave will more fit to user themselves. This is the priority. Please keep non-negotiable things(total budget for next month and Fixed expense) \n\n" +
+//                "### Inputs:\n1. **Previous Month's Budget**: The budget allocated to each category previous month. \n" +
+//                "2. **Previous Month's Spending Feedback**: Feedback on whether the user overspent or underspent in various categories previous month.\n" +
+//                "3. **Fixed Expenses**: Non-negotiable expenses such as rent, utilities, or loan repayments that must be covered.\n" +
+//                "4. **User's Preferences**: User's specific preferences or priorities for the next month. \n   - If the user's preferences cannot be fully accommodated without exceeding the total budget or making other categories severely underfunded, partially adjust the allocations and explain the reasons clearly in the `reason` field. If you cannot make it, YOU SHOULD EXPLAIN IN THE RESON THO.\n" +
+//                "5. **Next Month's Plans**: Include additional expenses for special events, holidays, or other significant activities. You should assign reasonable amount of cost. Especially if it's travel to somewhere, you should calculate all the flight and accomodations, and food, etc. \n" +
+//                "6. **Total Budget for next month**: The Non-negotiable maximum budget available for allocation next month (e.g., {0} KRW) There is no way you can exceed or underallocate the budget in there. THIS IS FIXED TOTAL BUDGET. At last you should sum up all of categories budget and if it doesn't fit to total fixed budget, you should arrange by applying proportions for all the categories so you should end up fit to total budget. THERE IS NO NEGOTIATION FOR THIS.\n\n" +
+//                "### Key Constraints:\n" +
+//                "- After distributing the `total_budget` across categories, ensure that the sum of category budgets matches the `total_budget` exactly. If necessary, adjust the allocations proportionally.\n" +
+//                "- In the explanation (`reason` field), integrate the actual category names from the user's data into the narrative where appropriate. Avoid mentioning the exact total budget in the explanation. Focus on explaining adjustments and rationale for each category based on user feedback and past spending patterns.\n" +
+//                "### Output Requirements:\nGenerate the budget in the following JSON format:\n" +
+//                "{\n  \"monthly_budget\": {\n    \"total_budget\": {0},\n    \"category_budgets\": {\n      \"경조/선물\": 0,\n      \"교육/학습\": 0,\n      \"교통\": 0,\n      \"금융\": 0,\n      \"문화/여가\": 0,\n      \"반려동물\": 0,\n      \"뷰티/미용\": 0,\n      \"생활\": 0,\n      \"술/유흥\": 0,\n      \"식비\": 0,\n      \"여행/숙박\": 0,\n      \"온라인 쇼핑\": 0,\n      \"의료/건강\": 0,\n      \"자녀/육아\": 0,\n      \"자동차\": 0,\n      \"주거/통신\": 0,\n      \"카페/간식\": 0,\n      \"패션/쇼핑\": 0\n    }\n  },\n  " +
+//                "  \"reason\": \"...\"}\n" +
+//                "guide about `reason`: You are a friendly financial assistant tasked with analyzing a user's monthly budget and spending habits. Your goal is to provide a thoughtful, concise, and motivating comment in Korean, explaining why certain categories have higher or lower budgets compared to previous months based on user feedback and spending patterns. Focus on positive aspects and offer gentle suggestions for improvements where necessary.\n\n" +
+//                "Feel free to structure your response in any way that fits the user's situation. While explaining overspending in certain categories, suggest increasing the budget for those categories in the next month. Similarly, for categories where the user spent less than planned, suggest reducing the budget for those categories.\n\n" +
+//                "Your response should be 8-12 sentences long. It should be motivating, with a focus on positive reinforcement, and gentle suggestions for areas to improve. Avoid mentioning specific numerical values or figures from the budget.\n\n" +
+//                "Here are some guidelines to help you form your response:\n\n" +
+//                "1) Focus on the positive aspects first – highlight areas where the user stayed within or under the budget.\n" +
+//                "2) For overspending categories, explain why it happened and suggest increasing the budget for those categories in the next month.\n" +
+//                "3) For categories where the user saved money or spent less than planned, suggest reducing the budget slightly.\n" +
+//                "4) Offer actionable suggestions to improve spending habits for the next month, with a focus on balance and sustainability.\n" +
+//                "5) Your response can follow a variety of structures. You can mix the categories based on importance or sequence, and adapt the tone to make it friendly and motivational.\n\n" +
+//                "Remember, the response should be in Korean and feel warm and encouraging. Avoid listing specific figures, and replace the placeholders with actual category names based on the user's data.\n\n" +
+//                "Example:\n\n" +
+//                "'이번 달 예산은 사용자님의 생활 패턴과 피드백을 반영하여 짜 보았어요. 필수적인 고정비인 {EssentialCategory1}과 {EssentialCategory2}는 우선적으로 배정했어요. 지난달 {OverusedCategory}에서 초과 사용된 점을 고려하여 예산을 늘렸어요. 사용이 적었던 {UnderusedCategory}는 예산을 조금 줄였어요. 계획한 활동에 맞춰 {PlannedEventCategory}에는 추가 예산을 배정했어요. 다음 달에는 {ImprovementCategory}를 더 잘 관리할 수 있도록 함께 노력해요. 😊'\n\n" +
+//                "Please adapt the structure to fit the user's unique situation and feedback.";
+                //"You are a friendly financial assistant tasked with analyzing a user's monthly budget and spending habits. Your goal is to provide a thoughtful, concise, and motivating comment in Korean, explaining why certain categories have higher or lower budgets compared to previous months based on user feedback and spending patterns. Focus on positive aspects and offer gentle suggestions for improvements where necessary.\n\nFeel free to structure your response in any way that fits the user's situation. While explaining overspending in certain categories, consider whether it's better to increase or decrease the budget for those categories. If a category exceeded the budget, suggest how to handle this for the next month, either by reducing the spending or adjusting the budget in a balanced way.\n\nYour response should be 8-12 sentences long. It should be motivating, with a focus on positive reinforcement, and gentle suggestions for areas to improve. Avoid mentioning specific numerical values or figures from the budget.\n\nHere are some guidelines to help you form your response:\n\n1) Focus on the positive aspects first – highlight areas where the user stayed within or under the budget.\n2) For overspending categories, explain why it happened and suggest how to adjust for the future.\n3) Offer actionable suggestions to improve spending habits for the next month.\n4) Your response can follow a variety of structures. You can mix the categories based on importance or sequence, and adapt the tone to make it friendly and motivational.\n\nRemember, the response should be in Korean and feel warm and encouraging. Avoid listing specific figures, and replace the placeholders with actual category names based on the user's data.\n\nExample:\n\n'다음 달 예산은 사용자님의 생활 패턴과 피드백을 반영하여 짜 보았어요. 필수적인 고정비인 {EssentialCategory1}과 {EssentialCategory2}는 우선적으로 배정했어요. 이번 달 {OverusedCategory}에서 초과 사용된 점을 고려하여 예산을 조금 늘렸어요. 사용이 적었던 {UnderusedCategory}는 예산을 조정하여 더 균형 있게 배정했어요. 계획한 활동에 맞춰 {PlannedEventCategory}에는 추가 예산을 배정했어요. 다음 달에는 {ImprovementCategory}를 더 잘 관리할 수 있도록 함께 노력해요. 다음 달도 계획한 일정이 잘 이루어지기를 바라요.😊'\n\nPlease adapt the structure to fit the user's unique situation and feedback.";
+                //"Generate a Korean explanation using category names from the user's data. Use the following template as a guide:\\n\\n'이번 달 예산은 사용자님의 생활 패턴과 피드백을 반영해서 짜 보았어요. 필수적으로 지출해야 하는 고정비 {EssentialCategory1}와 {EssentialCategory2}는 먼저 배정했어요. 지난달 {OverusedCategory}에서 초과 사용된 점을 고려해 금액을 조금 늘렸어요. 상대적으로 사용 빈도가 적었던 {UnderusedCategory} 항목은 금액을 줄였어요. 또한, 계획된 활동 {PlannedEventCategory}에 맞춰 새로 금액을 배정했어요. 요청한 항목 중 예산 부담이 큰 {HighDemandCategory}는 조정했지만 최대한 반영하려 노력했답니다. 다음 달도 계획한 일정이 잘 이루어지기를 바라요.\uD83D\uDE0A'\\n\\nReplace placeholders with actual category names that match the user's feedback and spending patterns.\"\n}";
+        String formattedString = String.format(GPT_PROMPT, userRequestedBudget);
 
         // 메시지를 저장할 JSON 배열 생성
         JSONArray messages = new JSONArray();
 
         // 시스템 메시지 추가
-        JSONObject systemMessage = createSystemMessage(GPT_PROMPT);
+        JSONObject systemMessage = createSystemMessage(formattedString);
         messages.put(systemMessage);
 
         // 사용자 데이터 입력 메시지 생성
@@ -368,7 +406,6 @@ public class AIPromptService {
         // 현재 예산
         userData.put("current_budget", new JSONObject()
                 .put("monthly_budget", new JSONObject()
-                        .put("total_budget", totalBudget)
                         .put("category_budgets", currentBudget)));
 
         // 이번 달 피드백
@@ -386,6 +423,9 @@ public class AIPromptService {
         // 다음 달 일정
         JSONArray schedulesArray = new JSONArray(nextMonthSchedules);
         userData.put("next_month_schedules", schedulesArray);
+
+        // 다음 달 예산
+        userData.put("total_budget", userRequestedBudget);
 
         // 응답 포맷 추가
         userData.put("response_format", new JSONObject()

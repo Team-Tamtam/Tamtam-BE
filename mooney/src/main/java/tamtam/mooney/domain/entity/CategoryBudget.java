@@ -9,6 +9,7 @@ import tamtam.mooney.global.common.BaseTimeEntity;
 
 import java.math.BigDecimal;
 
+@Setter
 @Getter
 @Entity
 @Builder
@@ -24,6 +25,7 @@ public class CategoryBudget extends BaseTimeEntity {
     @Column(nullable = false, length = 7)
     private String period;
 
+    @Enumerated(EnumType.STRING)
     @Column
     private CategoryName categoryName;
 

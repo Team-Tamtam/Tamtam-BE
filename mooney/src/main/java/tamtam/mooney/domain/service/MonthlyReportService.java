@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class MonthlyReportService {
     private final ExpenseService expenseService;
@@ -24,7 +25,6 @@ public class MonthlyReportService {
     private final CategoryBudgetRepository categoryBudgetRepository;
     private final AIPromptService aiPromptService;
 
-    @Transactional
     public MonthlyReportResponseDto getMonthlyReport(int year, int month) {
         User user = userService.getCurrentUser();
 
@@ -58,11 +58,9 @@ public class MonthlyReportService {
         var existingReport = monthlyReportRepository.findByUserAndPeriod(user, period);
         if (existingReport.isPresent()) {
             MonthlyReport monthlyReport = existingReport.get();
-            // BudgetStatus 결정
             monthlyReport.update(totalBudgetAmount, totalExpenseAmount, totalIncomeAmount, agentComment);
             monthlyReportRepository.save(monthlyReport);
         } else {
-            // 새로운 MonthlyReport 생성 시 BudgetStatus 설정
             MonthlyReport monthlyReport = MonthlyReport.builder()
                     .user(user)
                     .period(period)
