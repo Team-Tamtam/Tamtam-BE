@@ -36,7 +36,7 @@ public class AIPromptService {
         final String GPT_PROMPT = "You are a budget assistant designed to help users calculate their daily budget based on recurring expenses and time-specific scheduled expenses. Follow these rules and provide accurate, modifiable recommendations:\n\n" +
                 "1) Recurring Expenses (e.g., meals):\n   - Use the \"식비\" category to calculate the daily meal budget by dividing the remaining budget for the category by the number of remaining days in the month.\n   - Assume three meals per day and calculate the per-meal budget.\n\n" +
                 "2) Scheduled Expenses:\n   " +
-                " **Categorization of Events**: For each remaining event this month, categorize them based on the event's name and time. Refer to the user's provided scheduled_expenses and other_schedules_in_this_month data. Each category has events with descriptions and dates, and you need to apply the following rules" +
+                " **Categorization of Events**: For each remaining event this month, categorize them based on the event's name and time. Refer to the user's provided tomorrow_schedules and other_schedules_in_this_month data. Each category has events with descriptions and dates, and you need to apply the following rules" +
                 "Categorize events based on their names to assign them to one of the following categories using natural language understanding:\n      - (1. 경조/선물 2. 교육/학습 3. 교통 4. 금융 5. 문화/여가 6. 반려동물 7. 뷰티/미용 \n        8. 생활 9. 술/유흥 10. 식비 11. 여행/숙박 12. 온라인 쇼핑 13. 의료/건강 \n        14. 자녀/육아 15. 자동차 16. 주거/통신 17. 카페/간식 18. 패션/쇼핑 \n        19. HANG-OUT 20. 기타)\n      - Assign a category only if it is explicitly clear from the event name. If there is ambiguity or difficulty in deciding, assign category 20 (ETC). For friend names or casual events or just random places, use category 19 (HANG-OUT). Avoid making assumptions about unclear schedules.\n   2. Calculate the budget for each event:\n      1) If the event belongs to a specific category, \n\t      - divide the remaining budget of that category by the number of remaining schedules in it.\n      2)If the event is categorized as \"19. HANG-OUT\" or \"20. 기타,\" \n\t      - Divide the total remaining budget across all categories by the total number of meaningful events remaining this month, irrespective of their categories. To determine how many \"meaningful\" events there are, YOU analyze all future events.\n\t\t\t\t- Identify meaningful events by analyzing the event's name and time to determine the likelihood of incurring costs. \n\t\t\t  - Look for keywords in the event name such as \"저녁\", \"카페\", \"결제\", \"쇼핑\", \"이벤트\".\n\t\t\t\tInstruction for Analysis:\n\t\t\t\tFor all remaining events this month:\n\t\t\t\t- Analyze the event name and time data.\n\t\t\t\t- Match keywords indicating potential spending, such as \"저녁\", \"카페\", \"결제\".\n\t\t\t\t- Mark events as meaningful if they match any keyword or fall within relevant times.\n   3. Retrieve external price suggestions as \"average price for this event among people in their 20s\" and present them to the user.\n   4. For each event, combine the event-specific budget and the external price suggestion. User the weight which the user provided to adjust the weight (default: 50-50 mix) for the budget calculation.\n\n" +
                 "3) Total Daily Budget:\n   - Combine recurring and event-specific expenses to estimate the total daily budget.\n\nAdditional Requirements:\n   - Use the provided date and input data to ensure accurate budget calculations.\n   - Ensure all recommendations are easy for the user to modify after initial calculation.\n   \nResponse format: JSON - YOU SHOULD ONLY GIVE IN THIS FORMAT\n" +
                 "example is like the following:  \"{\n" +
@@ -48,13 +48,14 @@ public class AIPromptService {
                 "  ],\n" +
                 "  \"scheduled_expenses\\\": [\n" +
                 "    {\n" +
+                "      \\\"schedule_id\\\": Long, // schedule_id from the tomorrow_schedules (nullable) " +
                 "      \\\"time\\\": \\\"string\\\",  // The scheduled date and time of the expense (e.g., '2024-11-12 07:16:02')\n" +
                 "      \\\"category\\\": \\\"string\\\",  // Expected Category\n" +
-                "      \\\"description\\\": \\\"string\\\",  // A short description of the expense (e.g., 'meeting friends at cafe')\n" +
+                "      \\\"description\\\": \\\"string\\\",  // same as description from the input tomorrow_schedules. YOU SHOULD NOT CHANGE IT." +
                 "      \\\"amount\\\": integer\n" +
                 "    }\n" +
                 "  ],\n\n" +
-                "  \"daily_budget_total\": integer // sum of today_amount from the recurring_expenses list and the amount from the scheduled_expenses list" +
+                "  \"daily_budget_total\": integer // sum of per_day_amount from the recurring_expenses list and the weighted_budget from the scheduled_expenses list" +
                 "}\"\n";
 
         // 메시지를 저장할 JSON 배열 생성
@@ -80,11 +81,11 @@ public class AIPromptService {
                         "The \"{recurringCategory}\" category has a remaining budget of {remainingBudget} and there are {remainingDays} days left in the month. " +
                         "Please divide this budget evenly across the remaining days and calculate a per-meal amount, assuming three meals per day.\n" +
                         "Scheduled Expenses\n" +
-                        "In addition to recurring expenses, there are specific tomorrow_expenses for which I need an expense estimate. " +
+                        "In addition to recurring expenses, there are specific tomorrow_schedules for which I need an expense estimate. " +
                         "Here's how to handle these:\n" +
                         "Event Categorization: Please categorize the event \"{eventDescription}\" appropriately if possible. " +
                         "Otherwise, provide an option for me to choose later.\n" +
-                        "Budget Allocation: The budget amount for tomorrow_expenses is especially important. Each event should receive a budget by dividing the remaining budget of its category by the number of remaining events in that category. " +
+                        "Budget Allocation: The budget amount for tomorrow_schedules is especially important. Each event should receive a budget by dividing the remaining budget of its category by the number of remaining events in that category. " +
                         "Example: \"{eventCategory1}\" has a remaining budget of {remainingBudget1} and there are {remainingEvents1} events in this category. " +
                         "\"{eventCategory2}\" has a remaining budget of {remainingBudget2} and there are {remainingEvents2} events in this category.\n" +
                         "Price Suggestions: Include external price suggestions (e.g., average costs for similar activities among people in their 20s) if available. " +
@@ -110,7 +111,7 @@ public class AIPromptService {
                 "  \"weight_for_category\": %.1f\n" +
                 "  \"tomorrow_date\": \"%s\",\n" +  // 내일 날짜
                 "  \"total_budget_amount\": %s,\n" +
-                "  \"tomorrow_expenses\": %s,\n" +  // 내일의 소비일정
+                "  \"tomorrow_schedules\": %s,\n" +  // 내일의 소비일정
                 "  \"category_budgets\": {\n" +
                 "    \"교육/학습\": \"50000\",\n" +
                 "    \"교통\": \"70000\",\n" +
