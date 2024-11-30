@@ -24,6 +24,7 @@ public class UserSchedule extends BaseTimeEntity {
     private String title;
 
     @Enumerated(EnumType.STRING)
+    @Column
     private CategoryName categoryName;
 
     @Column

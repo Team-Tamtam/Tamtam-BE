@@ -29,17 +29,18 @@ public class Expense extends BaseTimeEntity {
     @Column
     private String description;
 
+    @Column
+    private String paymentMethod;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private CategoryName categoryName;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @NotNull
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
-
-    @Column
-    private String paymentMethod;
-
-    @Column
-    private CategoryName categoryName;
 
     /*@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "paymentMethodId", nullable = false)

@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -22,6 +23,7 @@ public class InitDB {
     private final CategoryRepository categoryRepository;
     private final ExpenseRepository expenseRepository;
     private final MonthlyBudgetRepository monthlyBudgetRepository;
+    private final CategoryBudgetRepository categoryBudgetRepository;
     private final UserRepository userRepository;
     private final UserScheduleRepository userScheduleRepository;
     private final UserService userService;
@@ -55,6 +57,35 @@ public class InitDB {
         }
     }
 
+
+
+    @PostConstruct
+    public void initCategoryBudget() {
+        // Check if the budget data exists. If it doesn't, initialize it with default values and save it.
+        if (categoryBudgetRepository.count() == 0) {
+            Map<CategoryName, BigDecimal> defaultBudget = Map.of(
+                    CategoryName.FOOD, BigDecimal.valueOf(300000),
+                    CategoryName.TRANSPORT, BigDecimal.valueOf(70000),
+                    CategoryName.CAFE, BigDecimal.valueOf(25000),
+                    CategoryName.ENTERTAINMENT, BigDecimal.valueOf(100000),
+                    CategoryName.FASHION, BigDecimal.valueOf(90000),
+                    CategoryName.BEAUTY, BigDecimal.valueOf(50000),
+                    CategoryName.LIFESTYLE, BigDecimal.valueOf(100000),
+                    CategoryName.HEALTH, BigDecimal.valueOf(30000),
+                    CategoryName.EDUCATION, BigDecimal.valueOf(35000)
+            );
+
+            // Save the default budget to the repository (or database)
+            defaultBudget.forEach((category, amount) -> {
+                CategoryBudget categoryBudget = new CategoryBudget();
+                categoryBudget.setCategoryName(category);
+                categoryBudget.setAmount(amount);
+                categoryBudget.setPeriod("2024-11"); // Assuming a period for now
+                categoryBudget.setUser(userService.getCurrentUser()); // Assuming user ID is 1 for this example
+                categoryBudgetRepository.save(categoryBudget);
+            });
+        }
+    }
     @PostConstruct
     public void initExpense() {
         try {
@@ -84,39 +115,59 @@ public class InitDB {
                 return;
             }
             // JSON 데이터를 Expense 객체로 변환하여 삽입
+
+            // Expense 데이터
             List<Expense> expenses = List.of(
-                    new Expense(LocalDateTime.of(2024, 11, 1, 0, 0), BigDecimal.valueOf(12000), "점심 식사", user, "신용카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 1, 0, 0), BigDecimal.valueOf(12000), "점심 식사", user, "카카오페이", CategoryName.FOOD),
                     new Expense(LocalDateTime.of(2024, 11, 1, 0, 0), BigDecimal.valueOf(2500), "지하철 이용", user, "체크카드", CategoryName.TRANSPORT),
                     new Expense(LocalDateTime.of(2024, 11, 2, 0, 0), BigDecimal.valueOf(8000), "커피와 디저트", user, "카카오페이", CategoryName.CAFE),
-                    new Expense(LocalDateTime.of(2024, 11, 2, 0, 0), BigDecimal.valueOf(12000), "영화 관람", user, "현금", CategoryName.ENTERTAINMENT),
-                    new Expense(LocalDateTime.of(2024, 11, 3, 0, 0), BigDecimal.valueOf(35000), "의류 구매", user, "신용카드", CategoryName.FASHION),
-                    new Expense(LocalDateTime.of(2024, 11, 4, 0, 0), BigDecimal.valueOf(20000), "저녁 외식", user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 2, 0, 0), BigDecimal.valueOf(12000), "영화 관람", user, "신용카드", CategoryName.ENTERTAINMENT),
+                    new Expense(LocalDateTime.of(2024, 11, 3, 0, 0), BigDecimal.valueOf(35000), "의류 구매", user, "체크카드", CategoryName.FASHION),
+                    new Expense(LocalDateTime.of(2024, 11, 4, 0, 0), BigDecimal.valueOf(20000), "저녁 외식", user, "현금", CategoryName.FOOD),
                     new Expense(LocalDateTime.of(2024, 11, 5, 0, 0), BigDecimal.valueOf(15000), "헤어 컷", user, "카카오페이", CategoryName.BEAUTY),
-                    new Expense(LocalDateTime.of(2024, 11, 6, 0, 0), BigDecimal.valueOf(1500), "버스 이용", user, "현금", CategoryName.TRANSPORT),
-                    new Expense(LocalDateTime.of(2024, 11, 7, 0, 0), BigDecimal.valueOf(8000), "점심 도시락", user, "카카오페이", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 6, 0, 0), BigDecimal.valueOf(1500), "버스 이용", user, "교통카드", CategoryName.TRANSPORT),
+                    new Expense(LocalDateTime.of(2024, 11, 7, 0, 0), BigDecimal.valueOf(8000), "점심 도시락", user, "체크카드", CategoryName.FOOD),
                     new Expense(LocalDateTime.of(2024, 11, 8, 0, 0), BigDecimal.valueOf(50000), "콘서트 티켓", user, "신용카드", CategoryName.ENTERTAINMENT),
+                    new Expense(LocalDateTime.of(2024, 11, 8, 0, 0), BigDecimal.valueOf(12000), "점심 식사", user, "카카오페이", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 8, 0, 0), BigDecimal.valueOf(10000), "저녁 식사", user, "현금", CategoryName.FOOD),
                     new Expense(LocalDateTime.of(2024, 11, 9, 0, 0), BigDecimal.valueOf(7000), "약국 구매", user, "체크카드", CategoryName.HEALTH),
                     new Expense(LocalDateTime.of(2024, 11, 10, 0, 0), BigDecimal.valueOf(15000), "브런치 카페", user, "카카오페이", CategoryName.CAFE),
-                    new Expense(LocalDateTime.of(2024, 11, 11, 0, 0), BigDecimal.valueOf(12000), "택시 이용", user, "현금", CategoryName.TRANSPORT),
-                    new Expense(LocalDateTime.of(2024, 11, 12, 0, 0), BigDecimal.valueOf(35000), "저녁 회식", user, "신용카드", CategoryName.FOOD),
-                    new Expense(LocalDateTime.of(2024, 11, 13, 0, 0), BigDecimal.valueOf(20000), "생필품 구매", user, "체크카드", CategoryName.LIFESTYLE),
-                    new Expense(LocalDateTime.of(2024, 11, 14, 0, 0), BigDecimal.valueOf(15000), "책 구매", user, "카카오페이", CategoryName.ENTERTAINMENT),
-                    new Expense(LocalDateTime.of(2024, 11, 15, 0, 0), BigDecimal.valueOf(5000), "아이스크림", user, "현금", CategoryName.CAFE),
-                    new Expense(LocalDateTime.of(2024, 11, 16, 0, 0), BigDecimal.valueOf(25000), "주말 저녁 외식", user, "신용카드", CategoryName.FOOD),
-                    new Expense(LocalDateTime.of(2024, 11, 17, 0, 0), BigDecimal.valueOf(45000), "기차 이용", user, "체크카드", CategoryName.TRANSPORT),
-                    new Expense(LocalDateTime.of(2024, 11, 18, 0, 0), BigDecimal.valueOf(80000), "신발 구매", user, "카카오페이", CategoryName.FASHION),
-                    new Expense(LocalDateTime.of(2024, 11, 19, 0, 0), BigDecimal.valueOf(5000), "아침 식사", user, "현금", CategoryName.FOOD),
-                    new Expense(LocalDateTime.of(2024, 11, 20, 0, 0), BigDecimal.valueOf(15000), "미술관 관람", user, "신용카드", CategoryName.ENTERTAINMENT),
-                    new Expense(LocalDateTime.of(2024, 11, 21, 0, 0), BigDecimal.valueOf(20000), "토익 교재", user, "카카오페이", CategoryName.EDUCATION),
+                    new Expense(LocalDateTime.of(2024, 11, 11, 0, 0), BigDecimal.valueOf(12000), "택시 이용", user, "카드", CategoryName.TRANSPORT),
+                    new Expense(LocalDateTime.of(2024, 11, 12, 0, 0), BigDecimal.valueOf(35000), "저녁 회식", user, "현금", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 13, 0, 0), BigDecimal.valueOf(20000), "생필품 구매", user, "카카오페이", CategoryName.LIFESTYLE),
+                    new Expense(LocalDateTime.of(2024, 11, 13, 0, 0), BigDecimal.valueOf(12000), "점심 식사", user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 14, 0, 0), BigDecimal.valueOf(10000), "저녁 식사", user, "신용카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 14, 0, 0), BigDecimal.valueOf(15000), "책 구매", user, "카드", CategoryName.ENTERTAINMENT),
+                    new Expense(LocalDateTime.of(2024, 11, 14, 0, 0), BigDecimal.valueOf(12000), "점심 식사", user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 14, 0, 0), BigDecimal.valueOf(10000), "저녁 식사", user, "현금", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 15, 0, 0), BigDecimal.valueOf(5000), "아이스크림", user, "카카오페이", CategoryName.CAFE),
+                    new Expense(LocalDateTime.of(2024, 11, 16, 0, 0), BigDecimal.valueOf(25000), "주말 저녁 외식", user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 17, 0, 0), BigDecimal.valueOf(45000), "기차 이용", user, "카드", CategoryName.TRANSPORT),
+                    new Expense(LocalDateTime.of(2024, 11, 18, 0, 0), BigDecimal.valueOf(80000), "신발 구매", user, "신용카드", CategoryName.FASHION),
+                    new Expense(LocalDateTime.of(2024, 11, 18, 0, 0), BigDecimal.valueOf(12000), "점심 식사", user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 18, 0, 0), BigDecimal.valueOf(10000), "저녁 식사", user, "현금", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 19, 0, 0), BigDecimal.valueOf(5000), "아침 식사", user, "카카오페이", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 20, 0, 0), BigDecimal.valueOf(15000), "미술관 관람", user, "카드", CategoryName.ENTERTAINMENT),
+                    new Expense(LocalDateTime.of(2024, 11, 20, 0, 0), BigDecimal.valueOf(12000), "점심 식사", user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 20, 0, 0), BigDecimal.valueOf(10000), "저녁 식사", user, "현금", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 21, 0, 0), BigDecimal.valueOf(20000), "토익 교재", user, "카드", CategoryName.EDUCATION),
+                    new Expense(LocalDateTime.of(2024, 11, 21, 0, 0), BigDecimal.valueOf(12000), "점심 식사", user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 21, 0, 0), BigDecimal.valueOf(10000), "저녁 식사", user, "카카오페이", CategoryName.FOOD),
                     new Expense(LocalDateTime.of(2024, 11, 22, 0, 0), BigDecimal.valueOf(4000), "커피", user, "현금", CategoryName.CAFE),
-                    new Expense(LocalDateTime.of(2024, 11, 23, 0, 0), BigDecimal.valueOf(12000), "점심 외식", user, "신용카드", CategoryName.FOOD),
-                    new Expense(LocalDateTime.of(2024, 11, 24, 0, 0), BigDecimal.valueOf(45000), "친구들과 술자리", user, "체크카드", CategoryName.ENTERTAINMENT),
-                    new Expense(LocalDateTime.of(2024, 11, 25, 0, 0), BigDecimal.valueOf(10000), "청소 용품 구매", user, "카카오페이", CategoryName.LIFESTYLE),
-                    new Expense(LocalDateTime.of(2024, 11, 26, 0, 0), BigDecimal.valueOf(30000), "정기 검진", user, "현금", CategoryName.HEALTH),
-                    new Expense(LocalDateTime.of(2024, 11, 27, 0, 0), BigDecimal.valueOf(12000), "액세서리 구매", user, "신용카드", CategoryName.FASHION),
-                    new Expense(LocalDateTime.of(2024, 11, 28, 0, 0), BigDecimal.valueOf(8000), "야식", user, "체크카드", CategoryName.FOOD),
-                    new Expense(LocalDateTime.of(2024, 11, 29, 0, 0), BigDecimal.valueOf(7000), "디저트 카페", user, "카카오페이", CategoryName.CAFE),
-                    new Expense(LocalDateTime.of(2024, 11, 30, 0, 0), BigDecimal.valueOf(30000), "연극 관람", user, "현금", CategoryName.ENTERTAINMENT)
+                    new Expense(LocalDateTime.of(2024, 11, 23, 0, 0), BigDecimal.valueOf(12000), "점심 외식", user, "카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 24, 0, 0), BigDecimal.valueOf(45000), "친구들과 술자리", user, "카카오페이", CategoryName.ENTERTAINMENT),
+                    new Expense(LocalDateTime.of(2024, 11, 25, 0, 0), BigDecimal.valueOf(10000), "청소 용품 구매", user, "체크카드", CategoryName.LIFESTYLE),
+                    new Expense(LocalDateTime.of(2024, 11, 25, 0, 0), BigDecimal.valueOf(12000), "점심 식사",  user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 25, 0, 0), BigDecimal.valueOf(10000), "저녁 식사",  user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 26, 0, 0), BigDecimal.valueOf(30000), "정기 검진",  user, "체크카드", CategoryName.HEALTH),
+                    new Expense(LocalDateTime.of(2024, 11, 26, 0, 0), BigDecimal.valueOf(12000), "점심 식사",  user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 26, 0, 0), BigDecimal.valueOf(10000), "저녁 식사",  user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 27, 0, 0), BigDecimal.valueOf(12000), "액세서리 구매", user, "체크카드",  CategoryName.FASHION),
+                    new Expense(LocalDateTime.of(2024, 11, 28, 0, 0), BigDecimal.valueOf(8000), "야식",  user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 29, 0, 0), BigDecimal.valueOf(7000), "디저트 카페",  user, "체크카드", CategoryName.CAFE),
+                    new Expense(LocalDateTime.of(2024, 11, 29, 0, 0), BigDecimal.valueOf(12000), "점심 식사",  user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 29, 0, 0), BigDecimal.valueOf(10000), "저녁 식사",  user, "체크카드", CategoryName.FOOD),
+                    new Expense(LocalDateTime.of(2024, 11, 30, 0, 0), BigDecimal.valueOf(30000), "연극 관람",  user, "체크카드", CategoryName.ENTERTAINMENT)
             );
 
             // 데이터 저장
