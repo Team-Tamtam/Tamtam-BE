@@ -39,7 +39,6 @@ public class DailyBudgetService {
 
         // DTO에서 받은 내일 일정 조회
         List<UserSchedule> tomorrowSchedules = userScheduleRepository.findAllById(requestDto.scheduleIds());
-        // TODO: 추후 일정 반복 체크해 추기
 
         // 내일 일정 데이터 구성
         List<Map<String, Object>> tomorrowScheduleMapList = tomorrowSchedules.stream()
@@ -48,17 +47,15 @@ public class DailyBudgetService {
                     Map<String, Object> expense = new HashMap<>();
                     expense.put("schedule_id", schedule.getScheduleId());
                     expense.put("title", schedule.getTitle());
-                    expense.put("category", schedule.getCategoryName() != null ? schedule.getCategoryName().name() : "UNKNOWN");
-                    expense.put("predicted_amount", schedule.getPredictedAmount());
                     return expense;
                 })
                 .toList();
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         String period = tomorrow.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        MonthlyBudget thisMonthBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
+        MonthlyBudget monthBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
                 .orElseThrow(()-> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
 
-        BigDecimal totalBudget = thisMonthBudget.getFinalAmount();
+        BigDecimal totalBudget = monthBudget.getFinalAmount();
         List<Expense> expenses = expenseService.findExpensesForUser(tomorrow.getYear(), tomorrow.getMonthValue(), user);
         BigDecimal totalExpenseAmount = expenseService.calculateTotalExpenseAmount(expenses);
 
@@ -66,17 +63,15 @@ public class DailyBudgetService {
         if (totalBudget.compareTo(totalExpenseAmount) < 0) {
             throw new CustomException(ErrorCode.ERROR);
         }
-
-        String aiResponse = aiPromptService.buildDailyBudgetMessage(
-                tomorrow,
-                tomorrowScheduleMapList,
-                totalBudget,
-                weightForCategory
-        );
-        log.info("AI Response:\n" + aiResponse);
-
         try {
-            JSONObject jsonObject = new JSONObject(aiResponse);
+
+            String aiResponse = aiPromptService.buildDailyBudgetMessage(
+                    tomorrow,
+                    tomorrowScheduleMapList,
+                    totalBudget,
+                    weightForCategory
+            );
+            log.info("AI Response:\n" + aiResponse);
             return mergeSchedulesWithJsonData(tomorrowSchedules, aiResponse);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
@@ -87,6 +82,9 @@ public class DailyBudgetService {
             List<UserSchedule> tomorrowSchedules,
             String jsonResponse
     ) throws Exception {
+        log.info("tomorrowSchedules: " + tomorrowSchedules);
+        log.info("jsonResponse: " + jsonResponse);
+
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(jsonResponse);
 
