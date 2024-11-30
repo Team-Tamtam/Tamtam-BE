@@ -32,7 +32,7 @@ public class BudgetContoller {
     @Operation(summary = "내일 소비 예정 일정 선택 & GPT가 세운 내일 예산 가져오기")
     @PostMapping("/tomorrow")
     public ResponseEntity<?> createTomorrowBudgetAndSchedules(@RequestBody @Valid DailyBudgetRequestDto requestDto) {
-        return ResponseEntity.ok(dailyBudgetService.getTomorrowBudgetAndSchedules2(requestDto));
+        return ResponseEntity.ok(dailyBudgetService.getTomorrowBudgetAndSchedules(requestDto));
     }
 
     @Operation(summary = "GPT에게 다음 달 예산 계획 요구사항 전달 & 응답으로 예산 및 주요 일정 받기")

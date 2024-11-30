@@ -51,10 +51,10 @@ public class DailyBudgetService {
                     return expense;
                 })
                 .toList();
-        LocalDate tomorrow = LocalDate.of(2024, 11, 30).plusDays(1);
+        LocalDate tomorrow = LocalDate.of(2024, 11,30).plusDays(1);
         String period = tomorrow.format(DateTimeFormatter.ofPattern("yyyy-MM"));
         MonthlyBudget monthBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
-                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+                .orElseThrow(()-> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
 
         BigDecimal totalBudget = monthBudget.getFinalAmount();
         List<Expense> expenses = expenseService.findExpensesForUser(tomorrow.getYear(), tomorrow.getMonthValue(), user);
@@ -90,14 +90,12 @@ public class DailyBudgetService {
 
         // JSON에서 recurring_expenses 추출
         List<Map<String, Object>> recurringExpenseData = Optional.ofNullable(rootNode.get("recurring_expenses"))
-                .map(node -> objectMapper.convertValue(node, new TypeReference<List<Map<String, Object>>>() {
-                }))
+                .map(node -> objectMapper.convertValue(node, new TypeReference<List<Map<String, Object>>>() {}))
                 .orElse(Collections.emptyList());
 
         // JSON에서 scheduled_expenses 추출
         List<Map<String, Object>> scheduledExpenseData = Optional.ofNullable(rootNode.get("scheduled_expenses"))
-                .map(node -> objectMapper.convertValue(node, new TypeReference<List<Map<String, Object>>>() {
-                }))
+                .map(node -> objectMapper.convertValue(node, new TypeReference<List<Map<String, Object>>>() {}))
                 .orElse(Collections.emptyList());
 
         // 반복 소비 데이터 매핑
@@ -184,76 +182,5 @@ public class DailyBudgetService {
                 .tomorrowSchedules(tomorrowScheduleDtos)
                 .budgetAmount(budgetAmount)
                 .build();
-    }
-
-    public JSONObject getTomorrowBudgetAndSchedules2(DailyBudgetRequestDto requestDto) {
-        // requestDto.scheduleIds()에서 제공된 scheduleId 리스트를 가져옴
-        List<Long> validScheduleIds = requestDto.scheduleIds();
-
-        // JSON 데이터 생성
-        String json = "{\"repeatedSchedules\":[{\"scheduleId\":1,\"title\":\"식비\",\"categoryName\":\"식비\",\"predictedAmount\":9600}],"
-                + "\"tomorrowSchedules\":[{\"scheduleId\":17,\"title\":\"3시반 미술 전시회\",\"categoryName\":\"기타\",\"predictedAmount\":15000},"
-                + "{\"scheduleId\":19,\"title\":\"카페에서 시험공부\",\"categoryName\":\"기타\",\"predictedAmount\":5000},"
-                + "{\"scheduleId\":21,\"title\":\"학원 등록\",\"categoryName\":\"기타\",\"predictedAmount\":200000}],"
-                + "\"budgetAmount\":229600}";
-
-        try {
-            // JSON 문자열을 JSONObject로 변환
-            JSONObject originalJsonResponse = new JSONObject(json);  // Original JSON response
-            JSONObject jsonResponse = new JSONObject(originalJsonResponse.toString());  // Create a copy for filtered response
-
-            // repeatedSchedules와 tomorrowSchedules 배열 추출
-            JSONArray repeatedSchedules = jsonResponse.getJSONArray("repeatedSchedules");
-            JSONArray tomorrowSchedules = jsonResponse.getJSONArray("tomorrowSchedules");
-
-            // validScheduleIds에 맞게 필터링
-            JSONArray filteredRepeatedSchedules = filterSchedules(repeatedSchedules, validScheduleIds);
-            JSONArray filteredTomorrowSchedules = filterSchedules(tomorrowSchedules, validScheduleIds);
-
-            // 필터링된 schedules를 jsonResponse에 다시 설정
-            jsonResponse.put("repeatedSchedules", filteredRepeatedSchedules);
-            jsonResponse.put("tomorrowSchedules", filteredTomorrowSchedules);
-
-            // budgetAmount 계산 (predictedAmount 합계)
-            double totalBudgetAmount = calculateTotalBudgetAmount(filteredRepeatedSchedules) + calculateTotalBudgetAmount(filteredTomorrowSchedules);
-
-            // 계산된 budgetAmount를 jsonResponse에 설정
-            jsonResponse.put("budgetAmount", totalBudgetAmount);
-
-            // 필터링된 JSON을 반환
-            return jsonResponse;
-        } catch (Exception e) {
-            log.error("Error merging schedules with JSON data", e);
-            throw new RuntimeException("Error processing the request", e);
-        }
-    }
-
-    private JSONArray filterSchedules(JSONArray schedules, List<Long> validScheduleIds) {
-        JSONArray filteredSchedules = new JSONArray();
-
-        // Iterate through each item in the JSONArray
-        for (int i = 0; i < schedules.length(); i++) {
-            JSONObject schedule = schedules.getJSONObject(i); // Get the JSONObject at index i
-            Long scheduleId = schedule.getLong("scheduleId");
-
-            // If the scheduleId is in the valid list, add it to the filtered array
-            if (validScheduleIds.contains(scheduleId)) {
-                filteredSchedules.put(schedule);
-            }
-        }
-
-        return filteredSchedules;
-    }
-
-    // Helper method to calculate the total budget amount from a list of schedules
-    private double calculateTotalBudgetAmount(JSONArray schedules) {
-        double totalAmount = 0;
-
-        for (int i = 0; i < schedules.length(); i++) {
-            JSONObject schedule = schedules.getJSONObject(i);
-            totalAmount += schedule.getDouble("predictedAmount");
-        }
-
-        return totalAmount;
     }
 }
