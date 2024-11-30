@@ -3,8 +3,10 @@ package tamtam.mooney.domain.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -180,5 +182,41 @@ public class DailyBudgetService {
                 .tomorrowSchedules(tomorrowScheduleDtos)
                 .budgetAmount(budgetAmount)
                 .build();
+    }
+
+    public JSONObject getTomorrowBudgetAndSchedules2(DailyBudgetRequestDto requestDto) {
+        // requestDto.scheduleIds()에서 제공된 scheduleId 리스트를 가져옴
+        List<Long> validScheduleIds = requestDto.scheduleIds();
+
+        // 모든 스케줄 중에서 유효한 scheduleId만 필터링
+        List<UserSchedule> tomorrowSchedules = userScheduleRepository.findAllById(validScheduleIds);
+
+        // JSON 데이터 생성
+        String json = "{\"recurring_expenses\":[{\"schedule_id\":null,\"title\":\"식비\",\"category_name\":\"식비\",\"predicted_amount\":9677}],"
+                + "\"tomorrowSchedules\":[{\"scheduleId\":17,\"title\":\"3시반 미술 전시회\",\"categoryName\":\"기타\",\"predictedAmount\":15000},"
+                + "{\"scheduleId\":19,\"title\":\"카페에서 시험공부\",\"categoryName\":\"기타\",\"predictedAmount\":5000},"
+                + "{\"scheduleId\":21,\"title\":\"학원 가기\",\"categoryName\":\"기타\",\"predictedAmount\":200000}],"
+                + "\"budgetAmount\":229677}";
+
+        try {
+            // JSON 문자열을 JSONObject로 변환
+            JSONObject jsonResponse = new JSONObject(json);
+
+            // tomorrowSchedules 필터링: scheduleId가 validScheduleIds에 포함되지 않는 항목은 제외
+            tomorrowSchedules = tomorrowSchedules.stream()
+                    .filter(schedule -> validScheduleIds.contains(schedule.getScheduleId()))
+                    .collect(Collectors.toList());
+
+            // 필요한 로직 추가 (예: tomorrowSchedules를 jsonResponse에 반영)
+
+            // 예시: 필터링된 tomorrowSchedules를 JSON 형식으로 추가
+            jsonResponse.put("tomorrowSchedules", tomorrowSchedules);
+
+            // DailyBudgetResponseDto 객체 생성 및 반환
+            return jsonResponse;
+        } catch (Exception e) {
+            log.error("Error merging schedules with JSON data", e);
+            throw new RuntimeException("Error processing the request", e);
+        }
     }
 }

@@ -198,7 +198,7 @@ public class InitDB {
     }
 
     @PostConstruct
-    public void initSchedules() {
+    public void initUserSchedules() {
         User user = userService.getCurrentUser();
         LocalDateTime startOfTomorrow = LocalDate.of(2024,11,30).plusDays(1).atStartOfDay();
         if (userScheduleRepository.findByUserAndStartDateTimeBetween(user, startOfTomorrow, startOfTomorrow.plusDays(1)).isEmpty()) {

@@ -7,11 +7,11 @@ import tamtam.mooney.global.initializer.InitDB;
 
 @Component
 @RequiredArgsConstructor
-public class InitSchedule {
+public class InitUserScheduleScheduler {
     private final InitDB initDB;
 
     @Scheduled(cron = "0 0 0 * * ?")
     public void initSchedules() {
-        initDB.initSchedules();
+        initDB.initUserSchedules();
     }
 }
