@@ -44,6 +44,7 @@ public class DailyBudgetService {
         List<Map<String, Object>> tomorrowScheduleMapList = tomorrowSchedules.stream()
                 .map(schedule -> {
                     Map<String, Object> expense = new HashMap<>();
+                    expense.put("schedule_id", schedule.getScheduleId());
                     expense.put("title", schedule.getTitle());
                     return expense;
                 })
@@ -117,7 +118,7 @@ public class DailyBudgetService {
                 .map(schedule -> {
                     // JSON 데이터에서 일치하는 설명을 찾아 병합
                     Map<String, Object> jsonExpense = scheduledExpenseData.stream()
-                            .filter(data -> schedule.getTitle().equals(data.get("description")))
+                            .filter(data -> schedule.getScheduleId().equals(data.get("schedule_id")))
                             .findFirst()
                             .orElse(null);
 
