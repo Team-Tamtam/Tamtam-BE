@@ -192,11 +192,11 @@ public class DailyBudgetService {
         List<UserSchedule> tomorrowSchedules = userScheduleRepository.findAllById(validScheduleIds);
 
         // JSON 데이터 생성
-        String json = "{\"repeatedSchedules\":[{\"scheduleId\":null,\"title\":\"식비\",\"categoryName\":\"식비\",\"predictedAmount\":9677}],"
+        String json = "{\"repeatedSchedules\":[{\"scheduleId\":null,\"title\":\"식비\",\"categoryName\":\"식비\",\"predictedAmount\":9600}],"
                 + "\"tomorrowSchedules\":[{\"scheduleId\":17,\"title\":\"3시반 미술 전시회\",\"categoryName\":\"기타\",\"predictedAmount\":15000},"
                 + "{\"scheduleId\":19,\"title\":\"카페에서 시험공부\",\"categoryName\":\"기타\",\"predictedAmount\":5000},"
-                + "{\"scheduleId\":21,\"title\":\"학원 가기\",\"categoryName\":\"기타\",\"predictedAmount\":200000}],"
-                + "\"budgetAmount\":229677}";
+                + "{\"scheduleId\":21,\"title\":\"학원 등록\",\"categoryName\":\"기타\",\"predictedAmount\":200000}],"
+                + "\"budgetAmount\":229600}";
 
         try {
             // JSON 문자열을 JSONObject로 변환

@@ -232,10 +232,10 @@ public class InitDB {
 
         // 세 번째 스케줄 추가
         UserSchedule schedule3 = UserSchedule.builder()
-                .title("학원 가기")
+                .title("학원 등록")
                 .startDateTime(startOfTomorrow.plusHours(18))
                 .endDateTime(startOfTomorrow.plusHours(19))
-                .location("학원 가기")
+                .location("실용음악학원")
                 .isRepeating(true)
                 .repeatType("WEEKLY")
                 .user(user)
