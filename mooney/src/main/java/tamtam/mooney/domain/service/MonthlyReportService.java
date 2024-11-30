@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class MonthlyReportService {
     private final ExpenseService expenseService;
@@ -24,7 +25,6 @@ public class MonthlyReportService {
     private final CategoryBudgetRepository categoryBudgetRepository;
     private final AIPromptService aiPromptService;
 
-    @Transactional
     public MonthlyReportResponseDto getMonthlyReport(int year, int month) {
         User user = userService.getCurrentUser();
 
