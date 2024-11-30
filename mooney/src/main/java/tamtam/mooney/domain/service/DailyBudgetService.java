@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class DailyBudgetService {
     private final UserService userService;
@@ -33,7 +34,6 @@ public class DailyBudgetService {
     private final AIPromptService aiPromptService;
     private final ExpenseService expenseService;
 
-    @Transactional(readOnly = true)
     public DailyBudgetResponseDto getTomorrowBudgetAndSchedules(DailyBudgetRequestDto requestDto) {
         User user = userService.getCurrentUser();
 
@@ -43,13 +43,10 @@ public class DailyBudgetService {
 
         // 내일 일정 데이터 구성
         List<Map<String, Object>> tomorrowScheduleMapList = tomorrowSchedules.stream()
-                .filter(schedule -> schedule.getPredictedAmount() != null && schedule.getPredictedAmount().compareTo(BigDecimal.ZERO) > 0)
                 .map(schedule -> {
                     Map<String, Object> expense = new HashMap<>();
-                    expense.put("schedule_id", schedule.getScheduleId());
                     expense.put("title", schedule.getTitle());
                     expense.put("category", schedule.getCategoryName() != null ? schedule.getCategoryName().name() : "UNKNOWN");
-                    expense.put("predicted_amount", schedule.getPredictedAmount());
                     return expense;
                 })
                 .toList();
@@ -132,9 +129,26 @@ public class DailyBudgetService {
                                     .orElse(CategoryName.EXTRA))
                             .orElse(CategoryName.EXTRA);
 
+
+                    // Retrieve and check weighted_budget
                     BigDecimal predictedAmount = Optional.ofNullable(jsonExpense)
-                            .map(expense -> new BigDecimal(String.valueOf(expense.get("weighted_budget"))))
+                            .map(expense -> {
+                                Object weightedBudget = expense.get("weighted_budget");
+                                // Log the weighted_budget value for debugging
+                                log.info("weighted_budget: " + weightedBudget);
+                                if (weightedBudget != null && !weightedBudget.toString().isEmpty()) {
+                                    try {
+                                        return new BigDecimal(weightedBudget.toString());
+                                    } catch (NumberFormatException e) {
+                                        log.error("Invalid number format for weighted_budget: " + weightedBudget, e);
+                                        return schedule.getPredictedAmount(); // fallback
+                                    }
+                                }
+                                return schedule.getPredictedAmount(); // fallback if null or empty
+                            })
                             .orElse(schedule.getPredictedAmount());
+                    log.info("predictedAmount: " + predictedAmount);
+
 
                     schedule.setCategoryNameAndPredictedAmount(categoryName, predictedAmount);
 

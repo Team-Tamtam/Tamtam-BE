@@ -9,5 +9,4 @@ import java.util.List;
 
 public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long> {
     List<UserSchedule> findByUserAndStartDateTimeBetween(User user, LocalDateTime start, LocalDateTime end);
-    List<UserSchedule> findByUserAndIsRepeatingTrue(User user);
 }
