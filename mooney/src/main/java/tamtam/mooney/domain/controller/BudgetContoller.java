@@ -38,23 +38,23 @@ public class BudgetContoller {
         return ResponseEntity.ok(responseDto);
     }
 
-//    @Operation(summary = "(테스트 용) GPT 응답에서 파싱하기")
-//    @PostMapping("/merge-schedules")
-//    public DailyBudgetResponseDto mergeSchedulesWithJsonData(
-//            @RequestBody MergeSchedulesRequest request
-//    ) {
-//        log.info("Received mergeSchedulesWithJsonData request: {}", request);
-//
-//        try {
-//            DailyBudgetResponseDto response = dailyBudgetService.mergeSchedulesWithJsonData(
-//                    request.getTomorrowSchedules(),
-//                    request.getJsonResponse()
-//            );
-//            log.info("Successfully merged schedules. Budget amount: {}", response.getBudgetAmount());
-//            return response;
-//        } catch (Exception e) {
-//            log.error("Error merging schedules with JSON data", e);
-//            throw new RuntimeException("Error processing the request", e);
-//        }
-//    }
+    @Operation(summary = "(테스트 용) GPT 응답에서 파싱하기")
+    @PostMapping("/merge-schedules")
+    public DailyBudgetResponseDto mergeSchedulesWithJsonData(
+            @RequestBody MergeSchedulesRequest request
+    ) {
+        log.info("Received mergeSchedulesWithJsonData request: {}", request);
+
+        try {
+            DailyBudgetResponseDto response = dailyBudgetService.mergeSchedulesWithJsonData(
+                    request.getTomorrowSchedules(),
+                    request.getJsonResponse()
+            );
+            log.info("Successfully merged schedules. Budget amount: {}", response.getBudgetAmount());
+            return response;
+        } catch (Exception e) {
+            log.error("Error merging schedules with JSON data", e);
+            throw new RuntimeException("Error processing the request", e);
+        }
+    }
 }
