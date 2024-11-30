@@ -37,7 +37,7 @@ public class AIPromptService {
                 "1) Recurring Expenses (e.g., meals):\n   - Use the \"식비\" category to calculate the daily meal budget by dividing the remaining budget for the category by the number of remaining days in the month.\n   - Assume three meals per day and calculate the per-meal budget.\n\n" +
                 "2) Scheduled Expenses:\n   " +
                 " **Categorization of Events**: For each remaining event this month, categorize them based on the event's name and time. Refer to the user's provided scheduled_expenses and other_schedules_in_this_month data. Each category has events with descriptions and dates, and you need to apply the following rules" +
-                "Categorize events based on their names to assign them to one of the following categories using natural language understanding:\n      - (1. 경조/선물 2. 교육/학습 3. 교통 4. 금융 5. 문화/여가 6. 반려동물 7. 뷰티/미용 \n        8. 생활 9. 술/유흥 10. 식비 11. 여행/숙박 12. 온라인 쇼핑 13. 의료/건강 \n        14. 자녀/육아 15. 자동차 16. 주거/통신 17. 카페/간식 18. 패션/쇼핑 \n        19. HANG-OUT 20. 기타)\n      - Assign a category only if it is explicitly clear from the event name. If there is ambiguity or difficulty in deciding, assign category 20 (ETC). For friend names or casual events or just random places, use category 19 (HANG-OUT). Avoid making assumptions about unclear schedules.\n   2. Calculate the budget for each event:\n      1) If the event belongs to a specific category, \n\t      - divide the remaining budget of that category by the number of remaining schedules in it.\n      2)If the event is categorized as \"19. HANG-OUT\" or \"20. 기타,\" \n\t      - Divide the total remaining budget across all categories by the total number of meaningful events remaining this month, irrespective of their categories. To determine how many \"meaningful\" events there are, YOU analyze all future events.\n\t\t\t\t- Identify meaningful events by analyzing the event's name and time to determine the likelihood of incurring costs. \n\t\t\t  - Look for keywords in the event name such as \"저녁\", \"카페\", \"결제\", \"쇼핑\", \"이벤트\".\n\t\t\t\tInstruction for Analysis:\n\t\t\t\tFor all remaining events this month:\n\t\t\t\t- Analyze the event name and time data.\n\t\t\t\t- Match keywords indicating potential spending, such as \"저녁\", \"카페\", \"결제\".\n\t\t\t\t- Mark events as meaningful if they match any keyword or fall within relevant times.\n   3. Retrieve external price suggestions as \"average price for this event among people in their 20s\" and present them to the user.\n   4. For each event, combine the event-specific budget and the external price suggestion. User the weight which the user provided to adjust the weight (default: 50-50 mix) for the budget calculation.\n\n" +
+                "Categorize events based on their names to assign them to one of the following categories using natural language understanding:\n      - (1. 경조/선물 2. 교육/학습 3. 교통 4. 금융 5. 문화/여가 6. 반려동물 7. 뷰티/미용 \n        8. 생활 9. 술/유흥 10. 식비 11. 여행/숙박 12. 온라인 쇼핑 13. 의료/건강 \n        14. 자녀/육아 15. 자동차 16. 주거/통신 17. 카페/간식 18. 패션/쇼핑 \n        19. HANG-OUT 20. 기타)\n      - Assign a category only if it is explicitly clear from the event name. If there is ambiguity or difficulty in deciding, assign category 20 (기타). For friend names or casual events or just random places, use category 19 (HANG-OUT). Avoid making assumptions about unclear schedules.\n   2. Calculate the budget for each event:\n      1) If the event belongs to a specific category, \n\t      - divide the remaining budget of that category by the number of remaining schedules in it.\n      2)If the event is categorized as \"19. HANG-OUT\" or \"20. 기타,\" \n\t      - Divide the total remaining budget across all categories by the total number of meaningful events remaining this month, irrespective of their categories. To determine how many \"meaningful\" events there are, YOU analyze all future events.\n\t\t\t\t- Identify meaningful events by analyzing the event's name and time to determine the likelihood of incurring costs. \n\t\t\t  - Look for keywords in the event name such as \"저녁\", \"카페\", \"결제\", \"쇼핑\", \"이벤트\".\n\t\t\t\tInstruction for Analysis:\n\t\t\t\tFor all remaining events this month:\n\t\t\t\t- Analyze the event name and time data.\n\t\t\t\t- Match keywords indicating potential spending, such as \"저녁\", \"카페\", \"결제\".\n\t\t\t\t- Mark events as meaningful if they match any keyword or fall within relevant times.\n   3. Retrieve external price suggestions as \"average price for this event among people in their 20s\" and present them to the user.\n   4. For each event, combine the event-specific budget and the external price suggestion. User the weight which the user provided to adjust the weight (default: 50-50 mix) for the budget calculation.\n\n" +
                 "3) Total Daily Budget:\n   - Combine recurring and event-specific expenses to estimate the total daily budget.\n\nAdditional Requirements:\n   - Use the provided date and input data to ensure accurate budget calculations.\n   - Ensure all recommendations are easy for the user to modify after initial calculation.\n   \nResponse format: JSON - YOU SHOULD ONLY GIVE IN THIS FORMAT\n" +
                 "example is like the following:  \"{\n" +
                 "  \\\"recurring_expenses\\\": [\n" +
@@ -347,15 +347,16 @@ public class AIPromptService {
                         "1. **입력 데이터**:\n" +
                         "   - 이전 달 예산 및 지출 피드백\n" +
                         "   - 고정 지출 (변경 불가 항목)\n" +
-                        "   - 다음 달의 총 예산 (고정값)\n" +
+                        "   - 다음 달의 총 예산 (절대 변경 불가 고정값)\n" +
                         "   - 사용자의 선호도와 다음 달 특별 계획 (예: 여행, 이벤트)\n\n" +
                         "2. **계산 지침**:\n" +
                         "   - 총 예산(`total_budget`)은 모든 카테고리 합계와 정확히 일치해야 합니다.\n" +
-                        "   - 고정 지출은 그대로 유지하며, 나머지 예산을 지난 달 예산에 피드백을 반영한 것으로 초기화하여, 이후 카테고리별로 할당하세요.\n" +
-                        "   - 지난 달의 피드백에서 과소비가 일어난 부분은 해당 카테고리의 예산이 부족하게 배정되었었다는 의미입니다 따라서 해당 카테고리의  다음 달 예산을 늘리세요.\n" +
-                        "   - 지난 달에 예산 내에 지출을 성공한 카테고리는 다음 달에는 해당 카테고리의 예산을 줄여도 된다는 의미입니다. 해당 카테고리의 다음 달 예산을 감축하세요. \n" +
-                        "   - 사용자의 선호도를 반영하고 다음달 특별 계획에 대한 지출 계획을 마련해두기 위해 예산을 배정하세요.  \n" +
-                        "   - 필요 시 비례적으로 조정해 예산을 조정하세요.\n\n" +
+                        "   - 고정 지출은 그대로 유지하며, 각 항목의 자연어를 분석해 카테고리를 배정한 후 (예를 들어. 넷플릭스 구독는 문화/여가 카테고리) 카테고리 예산에 포함해주세요.\n " +
+                        "   - 예산을 지난 달 모든 카테고리별 예산을 가져온 후, 지난 달 피드백을 반영하여 카테고리별로 증가 혹은 감소하세요. 특히 생활비, 식비는 중요합니다. \n" +
+                        "   - 지난 달의 피드백에서 과소비(예산보다 초과 지출)가 일어난 부분은 해당 카테고리의 예산이 부족하게 배정되었었다는 의미입니다. 이번 달에 사용자는 비슷한 정도를 소비할테니 이를 감안해 해당 카테고리의 다음 달 예산을 증가시키세요. 과소비가 일어났다면 무조건 해당 카테고리의 예산을 늘려야 합니다. \n" +
+                        "   - 지난 달에 예산 내에 지출을 성공한 카테고리에 대해서도, 사용자는 다음 달에도 지난 달과 비슷한 정도를 소비할테니 해당 카테고리의 예산을 줄여도 된다는 의미입니다. 해당 카테고리의 다음 달 예산을 감축하세요. \n" +
+                        "   - 사용자의 선호도를 반드시 반영해 예산을 조정하세요. 다음달 모든 특별 계획에 대한 지출 계획을 마련해두기 위해 추가적인 예산을 추가 배정하세요.  \n" +
+                        "   - 필요 시 비례적으로 조정해 예산을 조정하서 반드시 다음 달 총 예산 내에 당신의 예산이 맞춰지도록 해주세요. .\n\n" +
                         "3. **출력 형식**:\n" +
                         "   - JSON 구조:\n" +
                         "```json\n" +
@@ -388,13 +389,15 @@ public class AIPromptService {
                         "```\n\n" +
                         "4. ** 다음 달 예산 설정 이유 설명 작성 지침**:\n" +
                         "   - 따뜻하고 긍정적인 어조로 한국어로 작성해주세요.\n" +
-                        "   - '화연님의 다음 달 예산을 mooney가 짜보았습니다'로 시작해줘. \n" +
+                        "   - '화연님의 다음 달 예산을 mooney가 짜보았습니다'로 시작해주세요. \n" +
+                        "   - '이번 달에 배정된 금액을 말할 때는 너가 monthly_budget에 배정한 정확한 금액을 말해주세요. 다른 값이 나오면 안돼요.  \n" +
                         "   - 과소비를 해서 다음 달 예산을 지난달보다 증가시켜 배정한 카테고리는 지난 달에 해당 카테고리의 예산이 적게 부족하게 배정되었었다는 얘기입니다. 이에 대해서 사용자에게 설명해주세요. \n" +
                         "   - 지난 달에 예산 내에 쓰는 걸 성공해서, 다음 달에는 예산을 감축시킨 카테고리는 지난 달에 해당 카테고리의 예산이 많이 배정되었었다는 얘기입니다. 필요 시 남은 예산을 다른 카테고리에 할당하고 이에 대해 설명해주세요.\n" +
-                        "   - 사용자 일정, 지난달 피드백, 사용자의 선호사항 중 어떤 항목의 어떤 특정 이벤트를 고려해서 해당 카테고리의 예산조정이 있었는지 설명해주세요.\n" +
+                        "   - 사용자 일정, 지난달 피드백, 사용자의 선호사항 중 어떤 항목의 어떤 특정 이벤트를 고려해서 해당 카테고리의 예산조정이 있었는지 설명해주세요. 만약 지난달 피드백과 사용자의 일정을 모두 고려하는 등 여러 가지를 고려했다면 배정된 예산을 말할 때 영향을 미친 요소들을 모두 언급해주세요.\n" +
+                        "   - 사용자의 의견을 반영해서 예산에 어떻게 적용했는지 설명해주세요. .\n" +
                         "   - 지난 달의 소비 피드백이 아닌 다음 달의 예산을 설명하는 것을 명심해주세요. 절대 지난 달의 소비에 대해 피드백하거나 칭찬, 격려하지 말고 다음 달 예산을 그렇게 짠 이유를 뒷받침하는 근거로만 사용해주세요.  \n" +
                         "   - 문장의 호응구조가 맞는지 다시 한번 확인해줘. 특히나 하지만, 그러나, 때문에 등의 접속사를 쓰고 문장을 연결할 때 문장의 흐름이 자연스러운지 다시 한번 체크하고 진행해줘. \n" +
-                        "   - 총 15문장 이상으로 작성하고 중간에 이모지를 섞어, 당신이 왜 다음 달 예산을 이렇게 짰는지 최대한 구체적으로 이유를 설명해주세요.\n";
+                        "   - 총 15문장 이상으로 작성하고 이모지를 1~2개 섞어, 당신이 왜 다음 달 예산을 이렇게 짰는지 최대한 구체적으로 이유를 설명해주세요.\n";
 
 
 //                "You are a financial assistant AI responsible for creating a personalized monthly budget. Your task is to analyze the provided data and generate a budget plan for the next month in JSON format. Ensure the budget is tailored for 30 days (one month). Assign categories reasonably, especially for essential costs like food and living expenses, but within the fixed total budget. Explain the reasoning behind your allocations in detail in Korean in the `reason` field. You should assign a REASONABLE budget for 'Next Month's Plans' and each category. Your thinking process for planning next month budget should be like this. Consider Total budget and fixed expense for first(both are non-negotiable), and then get this month's budget and spending feedback for getting blue-map for the categories proportion, and then get User's preference and next month's plan to make the budget you gave will more fit to user themselves. This is the priority. Please keep non-negotiable things(total budget for next month and Fixed expense) \n\n" +
