@@ -257,7 +257,7 @@ public class AIPromptService {
      * @param totalBudgetAmount 전체 예산
      * @param categoryBudgets 카테고리별 예산 (Map 형식)
      * @param totalExpenseAmount 전체 지출
-     * @param categoryExpenses 카테고리별 예산 (Map 형식)
+     * @param categoryExpenses 카테고리별 지출 (Map 형식)
      * @return 생성된 피드백 메시지 내용이 담긴 String
      */
     public String buildMonthlyReportMessage(
