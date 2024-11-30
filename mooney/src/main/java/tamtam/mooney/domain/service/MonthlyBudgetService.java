@@ -99,9 +99,9 @@ public class MonthlyBudgetService {
 
         List<Map<String, Object>> nextMonthSchedules = new ArrayList<>();
 
-        // 첫 번째 일정: 친구들이랑 파티
+        // 첫 번째 일정: 친구들이랑 여행
         Map<String, Object> schedule1 = new HashMap<>();
-        schedule1.put("description", "친구들이랑 파티");
+        schedule1.put("description", "친구들이랑 여행");
         schedule1.put("time", "2024-12-15 00:00:00");
         schedule1.put("category", "여행/숙박");
 
