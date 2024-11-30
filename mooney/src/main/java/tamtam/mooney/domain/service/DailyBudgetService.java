@@ -76,7 +76,6 @@ public class DailyBudgetService {
         log.info("AI Response:\n" + aiResponse);
 
         try {
-            JSONObject jsonObject = new JSONObject(aiResponse);
             return mergeSchedulesWithJsonData(tomorrowSchedules, aiResponse);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
