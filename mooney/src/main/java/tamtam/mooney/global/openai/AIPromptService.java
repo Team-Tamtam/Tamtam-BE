@@ -341,7 +341,8 @@ public class AIPromptService {
     ) {
         // GPT 모델이 분석할 프롬프트 정의
         String GPT_PROMPT = "You are a financial assistant AI responsible for creating a personalized monthly budget. Your task is to analyze the provided data and generate a budget plan for the next month in JSON format. Ensure the budget is tailored for 30 days (one month). Assign categories reasonably, especially for essential costs like food and living expenses, but within the fixed total budget. Explain the reasoning behind your allocations in detail in Korean in the `reason` field. You should assign a REASONABLE budget for 'Next Month's Plans' and each category. \n\n" +
-                "### Inputs:\n1. **This Month's Budget**: The budget allocated to each category this month. \n" +
+                "### Inputs:\n" +
+                "1. **This Month's Budget**: The budget allocated to each category this month. \n" +
                 "2. **This Month's Spending Feedback**: Feedback on whether the user overspent or underspent in various categories this month.\n" +
                 "3. **Fixed Expenses**: Non-negotiable expenses such as rent, utilities, or loan repayments that must be covered.\n" +
                 "4. **User's Preferences**: User's specific preferences or priorities for the next month. \n   - If the user's preferences cannot be fully accommodated without exceeding the total budget or making other categories severely underfunded, partially adjust the allocations and explain the reasons clearly in the `reason` field. If you cannot make it, YOU SHOULD EXPLAIN IN THE REASON THO.\n" +
@@ -387,6 +388,9 @@ public class AIPromptService {
         // 다음 달 일정
         JSONArray schedulesArray = new JSONArray(nextMonthSchedules);
         userData.put("next_month_schedules", schedulesArray);
+
+        // 다음 달 예산
+        userData.put("total_budget", userRequestedBudget);
 
         // 응답 포맷 추가
         userData.put("response_format", new JSONObject()
