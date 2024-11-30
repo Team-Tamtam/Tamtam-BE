@@ -1,5 +1,6 @@
 package tamtam.mooney.domain.service;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -225,5 +226,70 @@ public class MonthlyBudgetService {
         MonthlyBudget monthlyBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
                 .orElseThrow(() -> new IllegalArgumentException("해당 월에 대한 예산 정보가 없습니다."));
         return monthlyBudget.getFinalAmount() != null ? monthlyBudget.getFinalAmount() : monthlyBudget.getInitialAmount();
+    }
+
+    public Object createNextMonthBudget2(@Valid MonthlyBudgetRequestDto requestDto) {
+        return "{\n" +
+                "  \"budgetAmount\": 800000,\n" +
+                "  \"categories\": [\n" +
+                "    {\n" +
+                "      \"categoryName\": \"식비\",\n" +
+                "      \"categoryBudgetAmount\": 350000\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"categoryName\": \"여행/숙박\",\n" +
+                "      \"categoryBudgetAmount\": 100000\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"categoryName\": \"문화/여가\",\n" +
+                "      \"categoryBudgetAmount\": 80000\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"categoryName\": \"교통\",\n" +
+                "      \"categoryBudgetAmount\": 70000\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"categoryName\": \"패션/쇼핑\",\n" +
+                "      \"categoryBudgetAmount\": 50000\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"categoryName\": \"교육/학습\",\n" +
+                "      \"categoryBudgetAmount\": 50000\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"categoryName\": \"뷰티/미용\",\n" +
+                "      \"categoryBudgetAmount\": 40000\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"categoryName\": \"카페/간식\",\n" +
+                "      \"categoryBudgetAmount\": 25000\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"categoryName\": \"의료/건강\",\n" +
+                "      \"categoryBudgetAmount\": 30000\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"categoryName\": \"기타\",\n" +
+                "      \"categoryBudgetAmount\": 5000\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"keySchedules\": [\n" +
+                "    {\n" +
+                "      \"scheduleId\": 1732969707658,\n" +
+                "      \"title\": \"친구들이랑 여행\",\n" +
+                "      \"categoryName\": \"여행/숙박\",\n" +
+                "      \"startDateTime\": \"2024-12-15 00:00:00\",\n" +
+                "      \"endDateTime\": \"2024-12-15 00:00:00\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"scheduleId\": 1732969707658,\n" +
+                "      \"title\": \"TOEIC 시험 준비 (온라인)\",\n" +
+                "      \"categoryName\": \"교육/학습\",\n" +
+                "      \"startDateTime\": \"2024-12-05 10:00:00\",\n" +
+                "      \"endDateTime\": \"2024-12-05 10:00:00\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"reason\": \"화연님의 다음 달 예산을 mooney가 짜보았습니다. \uD83D\uDE0A 이번 달에 교육/학습과 뷰티/미용에서 예산을 잘 지키셨기에, 다음 달에는 이 두 카테고리를 각각 50000원과 40000원으로 조정했습니다. \uD83D\uDCA1 특히 교육/학습 카테고리는 TOEIC 시험 준비를 위해 조금 더 예산을 늘렸습니다. 여행/숙박 카테고리에도 50000원을 배정하여 친구들과의 여행을 준비할 수 있도록 하였습니다. \uD83C\uDFD6\uFE0F \\n\\n하지만 지난달 문화/여가에서 예산을 초과하셨기에, 다음 달에는 해당 카테고리를 80000원으로 조정하여 지출을 관리해보실 수 있도록 했습니다. 또한 패션/쇼핑 카테고리도 예산을 줄여 50000원으로 설정했습니다. \uD83D\uDC57 이는 필요에 따라 더 많은 저축으로 이어질 수 있을 거예요. \uD83D\uDE0A \\n\\n식비는 사용자의 의견을 반영하여 350000원으로 늘렸습니다. 외식 비용을 줄이시는 것에 대한 조언을 고려하여, 식비를 늘려 다양한 음식을 즐길 수 있도록 했습니다. \uD83C\uDF7D\uFE0F 교통비는 지난달과 동일하게 유지했습니다. \\n\\n마지막으로 카페/간식 예산도 그대로 25000원으로 유지하여 자주 가는 카페에서 여유를 즐기는 데 도움이 될 것입니다. ☕ 이번 달 예산이 화연님께 도움이 되길 바랍니다! \uD83C\uDF89\"\n" +
+                "}\n";
     }
 }

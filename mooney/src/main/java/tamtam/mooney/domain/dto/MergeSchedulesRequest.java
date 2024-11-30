@@ -10,6 +10,6 @@ import java.util.List;
 @Setter
 public class MergeSchedulesRequest {
     // Getters and setters
-    private List<UserSchedule> tomorrowSchedules;
+    private List<Long> tomorrowScheduleIds;
     private String jsonResponse;
 }
