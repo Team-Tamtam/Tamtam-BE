@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.dto.request.MonthlyBudgetRequestDto;
 import tamtam.mooney.domain.dto.response.MonthlyBudgetResponseDto;
+import tamtam.mooney.domain.entity.CategoryBudget;
 import tamtam.mooney.domain.entity.MonthlyBudget;
 import tamtam.mooney.domain.entity.User;
+import tamtam.mooney.domain.repository.CategoryBudgetRepository;
 import tamtam.mooney.domain.repository.MonthlyBudgetRepository;
 import tamtam.mooney.global.openai.AIPromptService;
 
@@ -22,30 +24,47 @@ import java.util.*;
 public class MonthlyBudgetService {
     private final UserService userService;
     private final MonthlyBudgetRepository monthlyBudgetRepository;
+    private final CategoryBudgetRepository categoryBudgetRepository;
     private final AIPromptService aiPromptService;
 
     public MonthlyBudgetResponseDto createNextMonthBudget(MonthlyBudgetRequestDto requestDto) {
         User user = userService.getCurrentUser();
 
+        // 현재 월의 예산을 데이터베이스에서 가져오기
+        String currentPeriod = "2024-11"; // 현재 기간을 동적으로 계산하거나 requestDto에서 가져올 수 있습니다.
+        List<CategoryBudget> currentBudgetList = categoryBudgetRepository.findByUserAndPeriod(user, currentPeriod);
+
+        // 예산 데이터를 저장할 Map 생성
         Map<String, Integer> currentBudget = new HashMap<>();
 
-        currentBudget.put("교육/학습", 300000);
-        currentBudget.put("교통", 70000);
-        currentBudget.put("금융", 50000);
-        currentBudget.put("문화/여가", 30000);
-        currentBudget.put("뷰티/미용", 50000);
-        currentBudget.put("생활", 100000);
-        currentBudget.put("식비", 200000);
-        currentBudget.put("카페/간식", 25000);
-        currentBudget.put("패션/쇼핑", 15000);
-        currentBudget.put("의료/건강", 30000);
-        currentBudget.put("주거/통신", 150000);
-        currentBudget.put("경조/선물", 0);
-        currentBudget.put("자녀/육아", 0);
-        currentBudget.put("자동차", 0);
-        currentBudget.put("여행/숙박", 0);
-        currentBudget.put("온라인 쇼핑", 0);
-        currentBudget.put("술/유흥", 20000);
+        // 데이터베이스에서 가져온 예산 정보를 currentBudget Map에 채우기
+        for (CategoryBudget categoryBudget : currentBudgetList) {
+            // CategoryBudget의 카테고리 이름을 문자열로 변환하여 사용
+            String categoryName = categoryBudget.getCategoryName().toString();
+            // 예산은 BigDecimal에서 Integer로 변환하여 저장
+            currentBudget.put(categoryName, categoryBudget.getAmount().intValue());
+        }
+
+        // 만약 예산 데이터가 비어있다면 기본값을 할당
+        if (currentBudget.isEmpty()) {
+            currentBudget.put("교육/학습", 200000);
+            currentBudget.put("교통", 70000);
+            currentBudget.put("금융", 50000);
+            currentBudget.put("문화/여가", 30000);
+            currentBudget.put("뷰티/미용", 50000);
+            currentBudget.put("생활", 100000);
+            currentBudget.put("식비", 200000);
+            currentBudget.put("카페/간식", 25000);
+            currentBudget.put("패션/쇼핑", 15000);
+            currentBudget.put("의료/건강", 30000);
+            currentBudget.put("주거/통신", 150000);
+            currentBudget.put("경조/선물", 0);
+            currentBudget.put("자녀/육아", 0);
+            currentBudget.put("자동차", 0);
+            currentBudget.put("여행/숙박", 0);
+            currentBudget.put("온라인 쇼핑", 0);
+            currentBudget.put("술/유흥", 20000);
+        }
 
         // List<Map<String, Object>> 생성
         List<Map<String, Object>> fixedExpenses = new ArrayList<>();
