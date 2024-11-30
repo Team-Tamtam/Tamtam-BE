@@ -16,6 +16,7 @@ import tamtam.mooney.global.openai.AIPromptService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -114,6 +115,10 @@ public class MonthlyBudgetService {
         // 리스트에 일정 추가
         nextMonthSchedules.add(schedule1);
         nextMonthSchedules.add(schedule2);
+
+        //  Map<String, BigDecimal> categoryBudgets,Map<String, BigDecimal> categoryExpenses 사용해서 사용자가 덜 쓴만큼 반영한 다음 달 예산을 초기화하고 ai에게 넘기게 해야될듯
+        // 소비 금액 계산
+
 
         String aiResponse = aiPromptService.buildMonthlyBudgetMessage(
                 currentBudget,
