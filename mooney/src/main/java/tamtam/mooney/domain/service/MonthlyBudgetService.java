@@ -5,12 +5,12 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.dto.request.MonthlyBudgetRequestDto;
+import tamtam.mooney.domain.dto.response.CategoryExpenseResponseDto;
 import tamtam.mooney.domain.dto.response.MonthlyBudgetResponseDto;
-import tamtam.mooney.domain.entity.CategoryBudget;
-import tamtam.mooney.domain.entity.MonthlyBudget;
-import tamtam.mooney.domain.entity.User;
+import tamtam.mooney.domain.entity.*;
 import tamtam.mooney.domain.repository.CategoryBudgetRepository;
 import tamtam.mooney.domain.repository.MonthlyBudgetRepository;
+import tamtam.mooney.domain.repository.MonthlyReportRepository;
 import tamtam.mooney.global.openai.AIPromptService;
 
 import java.math.BigDecimal;
@@ -24,6 +24,7 @@ import java.util.*;
 public class MonthlyBudgetService {
     private final UserService userService;
     private final MonthlyBudgetRepository monthlyBudgetRepository;
+    private final MonthlyReportRepository monthlyReportRepository;
     private final CategoryBudgetRepository categoryBudgetRepository;
     private final AIPromptService aiPromptService;
 
@@ -65,6 +66,13 @@ public class MonthlyBudgetService {
             currentBudget.put("온라인 쇼핑", 0);
             currentBudget.put("술/유흥", 20000);
         }
+        String feedbackMessage;
+        Optional<MonthlyReport> monthlyReport = monthlyReportRepository.findByUserAndPeriod(user, currentPeriod);
+
+        if (monthlyReport.isPresent())
+            feedbackMessage = monthlyReport.get().getAgentComment();
+        else
+            feedbackMessage = "";
 
         // List<Map<String, Object>> 생성
         List<Map<String, Object>> fixedExpenses = new ArrayList<>();
@@ -109,20 +117,21 @@ public class MonthlyBudgetService {
 
         String aiResponse = aiPromptService.buildMonthlyBudgetMessage(
                 currentBudget,
-        "이번 달 예산을 비교적 잘 지켰지만, 식비는 조금 초과했습니다. 카페/간식은 적당히 사용했고, 패션/쇼핑 항목은 거의 사용하지 않았습니다. 다음 달에는 여행이 계획되어 있으니 여행 예산을 확보하는 것이 필요합니다.",
+                feedbackMessage,
                 fixedExpenses,
                 requestDto.message(),
                 nextMonthSchedules,
                 requestDto.budgetAmount()
         );
 
-        return parseBudgetResponse(aiResponse, nextMonthSchedules);
+        return parseBudgetResponse(aiResponse, nextMonthSchedules, requestDto.budgetAmount());
     }
 
 
     public static MonthlyBudgetResponseDto parseBudgetResponse(
             String inputJson,
-            List<Map<String, Object>> nextMonthSchedules
+            List<Map<String, Object>> nextMonthSchedules,
+            BigDecimal userRequestedBudget
     ) {
         JSONObject input = new JSONObject(inputJson);
 
@@ -153,11 +162,18 @@ public class MonthlyBudgetService {
                 totalBudget = totalBudget.add(categoryBudgetAmount);
             }
         }
+        BigDecimal difference = userRequestedBudget.subtract(totalBudget);
+
+        if (difference.compareTo(BigDecimal.ZERO) > 0) {
+            // CategoryName.EXTRA의 categoryDto를 setCategoryBudgetAmount로 설정
+            MonthlyBudgetResponseDto.CategoryBudgetDto extraCategoryDto =  new MonthlyBudgetResponseDto.CategoryBudgetDto();
+            extraCategoryDto.setCategoryName(CategoryName.EXTRA.getDescription());
+            extraCategoryDto.setCategoryBudgetAmount(difference);
+            categories.add(extraCategoryDto);
+            totalBudget = userRequestedBudget;
+        }
         responseDto.setCategories(categories);
-
-        // 2. 총 예산 (total_budget) 설정
         responseDto.setBudgetAmount(totalBudget);
-
 
         // 3. 중요 일정
 
