@@ -200,8 +200,7 @@ public class InitDB {
     @PostConstruct
     public void initSchedules() {
         User user = userService.getCurrentUser();
-        LocalDateTime startOfTomorrow = LocalDate.now().plusDays(1).atStartOfDay();
-
+        LocalDateTime startOfTomorrow = LocalDate.of(2024,11,30).plusDays(1).atStartOfDay();
         if (userScheduleRepository.findByUserAndStartDateTimeBetween(user, startOfTomorrow, startOfTomorrow.plusDays(1)).isEmpty()) {
             createAndSaveDefaultSchedules(user, startOfTomorrow);
         }
@@ -212,12 +211,10 @@ public class InitDB {
         List<UserSchedule> defaultSchedules = new ArrayList<>();
 
         UserSchedule schedule1 = UserSchedule.builder()
-                .title("채플 시작")
+                .title("카공")
                 .startDateTime(startOfTomorrow.plusHours(10))
                 .endDateTime(startOfTomorrow.plusHours(11))
-                .location("이화여자대학교 대강당")
-                .isRepeating(true)
-                .repeatType("WEEKLY")
+                .location("투썸플레이스")
                 .user(user)
                 .build();
         schedule1.setCategoryNameAndPredictedAmount(CategoryName.EDUCATION, BigDecimal.ZERO);
@@ -235,10 +232,10 @@ public class InitDB {
 
         // 세 번째 스케줄 추가
         UserSchedule schedule3 = UserSchedule.builder()
-                .title("바른학원")
+                .title("학원 가기")
                 .startDateTime(startOfTomorrow.plusHours(18))
                 .endDateTime(startOfTomorrow.plusHours(19))
-                .location("바른학원")
+                .location("학원 가기")
                 .isRepeating(true)
                 .repeatType("WEEKLY")
                 .user(user)

@@ -49,7 +49,7 @@ public class DailyBudgetService {
                     return expense;
                 })
                 .toList();
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        LocalDate tomorrow = LocalDate.of(2024, 11,30).plusDays(1);
         String period = tomorrow.format(DateTimeFormatter.ofPattern("yyyy-MM"));
         MonthlyBudget monthBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
                 .orElseThrow(()-> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));

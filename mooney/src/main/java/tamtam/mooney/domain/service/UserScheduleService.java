@@ -13,7 +13,6 @@ import tamtam.mooney.domain.repository.UserScheduleRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,8 +26,10 @@ public class UserScheduleService {
 
     public List<UserScheduleDto> getSchedulesForTomorrow() {
         User user = userService.getCurrentUser();
-        LocalDateTime startOfTomorrow = LocalDate.now().plusDays(1).atStartOfDay();
-        LocalDateTime endOfTomorrow = LocalDate.now().plusDays(1).atTime(LocalTime.MAX);
+
+        LocalDate now = LocalDate.of(2024, 11, 30);
+        LocalDateTime startOfTomorrow = now.plusDays(1).atStartOfDay();
+        LocalDateTime endOfTomorrow = now.plusDays(1).atTime(LocalTime.MAX);
 
         List<UserSchedule> tomorrowSchedules = userScheduleRepository.findByUserAndStartDateTimeBetween(user, startOfTomorrow, endOfTomorrow);
 
