@@ -105,10 +105,6 @@ public class InitDB {
             LocalDateTime startDateTime = startOfMonth.atStartOfDay(); // 첫 번째 날짜의 00:00시로 변환
             LocalDateTime endDateTime = endOfMonth.atTime(23, 59, 59, 999999999); // 마지막 날짜의 마지막 순간 (23:59:59.999999999)
 
-            // 이번 달의 총 지출 금액 가져오기
-            BigDecimal totalExpenseThisMonth = expenseRepository.findTotalExpenseAmountByUserAndMonth(user, startDateTime, endDateTime);
-            log.info("이번 달의 총 지출 금액: {}", totalExpenseThisMonth);
-
             // 이번 달에 지출이 있으면 초기화 작업을 하지 않음
             if (totalExpenseThisMonth.compareTo(BigDecimal.ZERO) != 0) {
                 log.info("이번 달에 지출이 이미 존재하므로 초기화 작업을 건너뜁니다.");
@@ -169,6 +165,10 @@ public class InitDB {
                     new Expense(LocalDateTime.of(2024, 12, 29, 0, 0), BigDecimal.valueOf(10000), "저녁 식사", user, "체크카드", CategoryName.FOOD),
                     new Expense(LocalDateTime.of(2024, 12, 30, 0, 0), BigDecimal.valueOf(30000), "연극 관람", user, "체크카드", CategoryName.ENTERTAINMENT)
             );
+            
+            // 이번 달의 총 지출 금액 가져오기
+            BigDecimal totalExpenseThisMonth = expenseRepository.findTotalExpenseAmountByUserAndMonth(user, startDateTime, endDateTime);
+            log.info("이번 달의 총 지출 금액: {}", totalExpenseThisMonth);
 
             // 데이터 저장
             expenseRepository.saveAll(expenses);
