@@ -61,7 +61,6 @@ public class InitDB {
 
     @PostConstruct
     public void initCategoryBudget() {
-        // Check if the budget data exists. If it doesn't, initialize it with default values and save it.
         if (categoryBudgetRepository.count() == 0) {
             Map<CategoryName, BigDecimal> defaultBudget = Map.of(
                     CategoryName.FOOD, BigDecimal.valueOf(300000),
@@ -75,13 +74,16 @@ public class InitDB {
                     CategoryName.EDUCATION, BigDecimal.valueOf(35000)
             );
 
-            // Save the default budget to the repository (or database)
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+            String currentPeriod = LocalDate.now().format(formatter);
+
+            // 디폹트 예산 생성 (테스트용)
             defaultBudget.forEach((category, amount) -> {
                 CategoryBudget categoryBudget = new CategoryBudget();
                 categoryBudget.setCategoryName(category);
                 categoryBudget.setAmount(amount);
-                categoryBudget.setPeriod("2024-11"); // Assuming a period for now
-                categoryBudget.setUser(userService.getCurrentUser()); // Assuming user ID is 1 for this example
+                categoryBudget.setPeriod(currentPeriod);
+                categoryBudget.setUser(userService.getCurrentUser());
                 categoryBudgetRepository.save(categoryBudget);
             });
         }

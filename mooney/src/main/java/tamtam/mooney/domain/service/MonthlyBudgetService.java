@@ -14,7 +14,9 @@ import tamtam.mooney.domain.repository.MonthlyReportRepository;
 import tamtam.mooney.global.openai.AIPromptService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,7 +35,8 @@ public class MonthlyBudgetService {
         User user = userService.getCurrentUser();
 
         // 현재 월의 예산을 데이터베이스에서 가져오기
-        String currentPeriod = "2024-11"; // 현재 기간을 동적으로 계산하거나 requestDto에서 가져올 수 있습니다.
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        String currentPeriod = LocalDate.now().format(formatter);
         List<CategoryBudget> currentBudgetList = categoryBudgetRepository.findByUserAndPeriod(user, currentPeriod);
 
         // 예산 데이터를 저장할 Map 생성
