@@ -241,7 +241,7 @@ public class InitDB {
                 .endDateTime(startOfTomorrow.plusHours(19))
                 .location("실용음악학원")
                 .isRepeating(true)
-                .repeatType("WEEKLY")
+                .repeatType("MONTHLY")
                 .user(user)
                 .build();
         schedule3.setCategoryNameAndPredictedAmount(CategoryName.EDUCATION, BigDecimal.valueOf(200000L));
