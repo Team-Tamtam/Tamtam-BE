@@ -207,7 +207,6 @@ public class InitDB {
 
         if (userScheduleRepository.findByUserAndStartDateTimeBetween(user, startOfTomorrow, startOfTomorrow.plusDays(1)).isEmpty()) {
             createAndSaveDefaultSchedules(user, startOfTomorrow);
-            createAndSaveDefaultNextMonthSchedules(user);
         }
     }
 
@@ -251,6 +250,7 @@ public class InitDB {
         // Save all default schedules
         userScheduleRepository.saveAll(defaultSchedules);
     }
+
     private void createAndSaveDefaultNextMonthSchedules(User user) {
         List<UserSchedule> nextMonthSchedules = new ArrayList<>();
 

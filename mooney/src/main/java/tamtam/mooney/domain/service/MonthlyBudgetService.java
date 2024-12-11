@@ -107,12 +107,14 @@ public class MonthlyBudgetService {
 
         // 첫 번째 일정: 친구들이랑 여행
         Map<String, Object> schedule1 = new HashMap<>();
+        schedule1.put("schedule_id", 31L);
         schedule1.put("description", "친구들이랑 여행");
         schedule1.put("time", "2025-01-15 05:00:00");
         schedule1.put("category", "여행/숙박");
 
         // 두 번째 일정: TOEIC 시험 준비
         Map<String, Object> schedule2 = new HashMap<>();
+        schedule1.put("schedule_id", 32L);
         schedule2.put("description", "TOEIC 시험 준비");
         schedule2.put("time", "2025-01-05 10:00:00");
         schedule2.put("category", "교육/학습");
@@ -191,7 +193,7 @@ public class MonthlyBudgetService {
         List<MonthlyBudgetResponseDto.MonthScheduleDto> keySchedules = new ArrayList<>();
         for (Map<String, Object> schedule : nextMonthSchedules) {
             MonthlyBudgetResponseDto.MonthScheduleDto scheduleDto = MonthlyBudgetResponseDto.MonthScheduleDto.builder()
-                    .scheduleId(System.currentTimeMillis())  // 임의로 scheduleId 부여, 실제 환경에서는 적절한 값 사용
+                    .scheduleId((Long) schedule.get("schedule_id"))
                     .title((String) schedule.get("description"))
                     .categoryName((String) schedule.get("category"))
                     .startDateTime((String) schedule.get("time"))  // 시간 형식에 맞게 변환 필요
