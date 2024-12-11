@@ -11,6 +11,8 @@ import tamtam.mooney.domain.entity.*;
 import tamtam.mooney.domain.repository.CategoryBudgetRepository;
 import tamtam.mooney.domain.repository.MonthlyBudgetRepository;
 import tamtam.mooney.domain.repository.MonthlyReportRepository;
+import tamtam.mooney.global.exception.CustomException;
+import tamtam.mooney.global.exception.ErrorCode;
 import tamtam.mooney.global.openai.AIPromptService;
 
 import java.math.BigDecimal;
@@ -226,7 +228,7 @@ public class MonthlyBudgetService {
     @Transactional(readOnly = true)
     public BigDecimal getMonthlyBudgetAmount(User user, String period) {
         MonthlyBudget monthlyBudget = monthlyBudgetRepository.findByUserAndPeriod(user, period)
-                .orElseThrow(() -> new IllegalArgumentException("해당 월에 대한 예산 정보가 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
         return monthlyBudget.getFinalAmount() != null ? monthlyBudget.getFinalAmount() : monthlyBudget.getInitialAmount();
     }
 }
