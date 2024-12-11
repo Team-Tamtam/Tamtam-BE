@@ -207,6 +207,7 @@ public class InitDB {
 
         if (userScheduleRepository.findByUserAndStartDateTimeBetween(user, startOfTomorrow, startOfTomorrow.plusDays(1)).isEmpty()) {
             createAndSaveDefaultSchedules(user, startOfTomorrow);
+            createAndSaveDefaultNextMonthSchedules(user);
         }
     }
 
@@ -249,5 +250,34 @@ public class InitDB {
 
         // Save all default schedules
         userScheduleRepository.saveAll(defaultSchedules);
+    }
+    private void createAndSaveDefaultNextMonthSchedules(User user) {
+        List<UserSchedule> nextMonthSchedules = new ArrayList<>();
+
+        // 다음달의 첫 번째 일정: 친구들이랑 여행
+        UserSchedule nmSchedule1 = UserSchedule.builder()
+                .title("친구들이랑 여행")
+                .startDateTime(LocalDate.of(2025, 1, 15).atStartOfDay().plusHours(5))
+                .endDateTime(LocalDate.of(2025, 1, 16).atStartOfDay().plusHours(18)) // 예시로 5시간 추가
+                .location("속초")
+                .user(user)
+                .build();
+        nmSchedule1.setCategoryNameAndPredictedAmount(CategoryName.TRAVEL, BigDecimal.ZERO);
+
+
+        // 다음달의 두 번째 일정: TOEIC 시험 준비
+        UserSchedule nmSchedule2 = UserSchedule.builder()
+                .title("TOEIC 시험 준비")
+                .startDateTime(LocalDate.of(2025, 1, 5).atTime(10, 0))
+                .endDateTime(LocalDate.of(2025, 1, 5).atTime(12, 0))  // 예시로 2시간 추가
+                .location("온라인")
+                .user(user)
+                .build();
+        nmSchedule2.setCategoryNameAndPredictedAmount(CategoryName.EDUCATION, BigDecimal.ZERO);
+
+        // 리스트에 일정 추가
+        nextMonthSchedules.add(nmSchedule1);
+        nextMonthSchedules.add(nmSchedule2);
+        userScheduleRepository.saveAll(nextMonthSchedules);
     }
 }

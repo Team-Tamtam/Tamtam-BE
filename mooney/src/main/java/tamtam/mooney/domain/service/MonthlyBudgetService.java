@@ -108,13 +108,13 @@ public class MonthlyBudgetService {
         // 첫 번째 일정: 친구들이랑 여행
         Map<String, Object> schedule1 = new HashMap<>();
         schedule1.put("description", "친구들이랑 여행");
-        schedule1.put("time", "2024-12-15 00:00:00");
+        schedule1.put("time", "2025-01-15 05:00:00");
         schedule1.put("category", "여행/숙박");
 
-        // 두 번째 일정: TOEIC 시험 준비 (온라인)
+        // 두 번째 일정: TOEIC 시험 준비
         Map<String, Object> schedule2 = new HashMap<>();
-        schedule2.put("description", "TOEIC 시험 준비 (온라인)");
-        schedule2.put("time", "2024-12-05 10:00:00");
+        schedule2.put("description", "TOEIC 시험 준비");
+        schedule2.put("time", "2025-01-05 10:00:00");
         schedule2.put("category", "교육/학습");
 
         // 리스트에 일정 추가

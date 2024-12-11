@@ -68,9 +68,9 @@ public class UserSchedule extends BaseTimeEntity {
         this.location = location;
         // 기본값 처리
         this.isRepeating = (isRepeating != null) ? isRepeating : false;
-        this.repeatType = (repeatType != null) ? repeatType : null;
-        this.repeatDayOfWeek = (repeatDayOfWeek != null) ? repeatDayOfWeek : null;
-        this.repeatDayOfMonth = (repeatDayOfMonth != null) ? repeatDayOfMonth : null;
+        this.repeatType = repeatType;
+        this.repeatDayOfWeek = repeatDayOfWeek;
+        this.repeatDayOfMonth = repeatDayOfMonth;
         this.user = user;
     }
 
