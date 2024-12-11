@@ -215,15 +215,13 @@ public class InitDB {
         List<UserSchedule> defaultSchedules = new ArrayList<>();
 
         UserSchedule schedule1 = UserSchedule.builder()
-                .title("채플 시작")
+                .title("카페에서 시험공부")
                 .startDateTime(startOfTomorrow.plusHours(10))
                 .endDateTime(startOfTomorrow.plusHours(11))
-                .location("이화여자대학교 대강당")
-                .isRepeating(true)
-                .repeatType("WEEKLY")
+                .location("투썸플레이스")
                 .user(user)
                 .build();
-        schedule1.setCategoryNameAndPredictedAmount(CategoryName.EDUCATION, BigDecimal.ZERO);
+        schedule1.setCategoryNameAndPredictedAmount(CategoryName.EDUCATION, BigDecimal.valueOf(5000L));
         defaultSchedules.add(schedule1);
 
         UserSchedule schedule2 = UserSchedule.builder()
@@ -237,15 +235,16 @@ public class InitDB {
         defaultSchedules.add(schedule2);
 
         // 세 번째 스케줄 추가
-        // 세 번째 스케줄 추가
         UserSchedule schedule3 = UserSchedule.builder()
-                .title("카페에서 시험공부")
-                .startDateTime(startOfTomorrow.plusHours(10))
-                .endDateTime(startOfTomorrow.plusHours(11))
-                .location("투썸플레이스")
+                .title("학원 등록")
+                .startDateTime(startOfTomorrow.plusHours(18))
+                .endDateTime(startOfTomorrow.plusHours(19))
+                .location("실용음악학원")
+                .isRepeating(true)
+                .repeatType("WEEKLY")
                 .user(user)
                 .build();
-        schedule3.setCategoryNameAndPredictedAmount(CategoryName.EDUCATION, BigDecimal.valueOf(10000L));
+        schedule3.setCategoryNameAndPredictedAmount(CategoryName.EDUCATION, BigDecimal.valueOf(200000L));
         defaultSchedules.add(schedule3);
 
         // Save all default schedules
