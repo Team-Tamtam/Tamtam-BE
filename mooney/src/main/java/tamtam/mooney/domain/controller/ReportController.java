@@ -26,7 +26,7 @@ public class ReportController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @Operation(summary = "월 소비 카테고리 별 퍼센트, 지난 달 예산값 가져오기")
+    @Operation(summary = "월 소비 카테고리 별 퍼센트, 해당 달 예산값 가져오기")
     @PostMapping("/categories")
     public ResponseEntity<?> getCategoryExpenseStats(@RequestParam(name = "year") final int year,
                                                      @RequestParam(name = "month") final int month) {
