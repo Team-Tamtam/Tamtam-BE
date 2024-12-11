@@ -57,13 +57,32 @@ public class InitDB {
         }
     }
 
+    // 테스트 데이터
+    @PostConstruct
+    public void initMonthlyBudget() {
+        User currentUser = userService.getCurrentUser();
+        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
+        // 예산이 없는 경우 기본 예산을 설정
+        if (monthlyBudgetRepository.findByUserAndPeriod(currentUser, currentMonth).isEmpty()) {
+            MonthlyBudget defaultBudget = MonthlyBudget.builder()
+                    .period(currentMonth)
+                    .initialAmount(BigDecimal.valueOf(850000))
+                    .finalAmount(BigDecimal.valueOf(850000))
+                    .user(currentUser)
+                    .build();
+            monthlyBudgetRepository.save(defaultBudget); // 예산 저장
+        }
+    }
 
     @PostConstruct
     public void initCategoryBudget() {
-        if (categoryBudgetRepository.count() == 0) {
+        User user = userService.getCurrentUser();
+        String currentMonth =  LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+        if (categoryBudgetRepository.findByUserAndPeriod(user, currentMonth).isEmpty()) {
             Map<CategoryName, BigDecimal> defaultBudget = Map.of(
-                    CategoryName.FOOD, BigDecimal.valueOf(300000),
+                    CategoryName.FOOD, BigDecimal.valueOf(350000),
                     CategoryName.TRANSPORT, BigDecimal.valueOf(70000),
                     CategoryName.CAFE, BigDecimal.valueOf(25000),
                     CategoryName.ENTERTAINMENT, BigDecimal.valueOf(100000),
@@ -179,24 +198,6 @@ public class InitDB {
             // 예외 발생 시 로그로 출력하고 다시 예외를 던짐
             log.error("지출 초기화 중 오류 발생", e);
             throw e;
-        }
-    }
-
-    // 테스트 데이터
-    @PostConstruct
-    public void initMonthlyBudget() {
-        User currentUser = userService.getCurrentUser();
-        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-        // 예산이 없는 경우 기본 예산을 설정
-        if (monthlyBudgetRepository.findByUserAndPeriod(currentUser, currentMonth).isEmpty()) {
-            MonthlyBudget defaultBudget = MonthlyBudget.builder()
-                    .period(currentMonth)
-                    .initialAmount(BigDecimal.valueOf(850000))
-                    .finalAmount(BigDecimal.valueOf(850000))
-                    .user(currentUser)
-                    .build();
-            monthlyBudgetRepository.save(defaultBudget); // 예산 저장
         }
     }
 

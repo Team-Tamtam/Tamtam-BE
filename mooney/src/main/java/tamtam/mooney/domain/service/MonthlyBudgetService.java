@@ -5,7 +5,6 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.dto.request.MonthlyBudgetRequestDto;
-import tamtam.mooney.domain.dto.response.CategoryExpenseResponseDto;
 import tamtam.mooney.domain.dto.response.MonthlyBudgetResponseDto;
 import tamtam.mooney.domain.entity.*;
 import tamtam.mooney.domain.repository.CategoryBudgetRepository;
@@ -114,7 +113,7 @@ public class MonthlyBudgetService {
 
         // 두 번째 일정: TOEIC 시험 준비
         Map<String, Object> schedule2 = new HashMap<>();
-        schedule1.put("schedule_id", 32L);
+        schedule2.put("schedule_id", 32L);
         schedule2.put("description", "TOEIC 시험 준비");
         schedule2.put("time", "2025-01-05 10:00:00");
         schedule2.put("category", "교육/학습");
